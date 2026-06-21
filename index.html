@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شفيق جمعة | مصمم جرافيك</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --pink:#EE477C;--light:#F7F8FC;--blue:#409CF0;
+  --teal:#11BE8A;--yellow:#F1C64D;--dark:#05041B;
+  --dark2:#0d0b2e;--dark3:#140f3a;
+  --muted:rgba(247,248,252,0.55);--soft:rgba(247,248,252,0.8);
+  --cb:rgba(255,255,255,0.04);--cbr:rgba(255,255,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--dark);color:var(--light);direction:rtl;overflow-x:hidden;cursor:none;}
+a,button{cursor:none;}
+
+/* CURSOR */
+#cdot{position:fixed;width:8px;height:8px;border-radius:50%;background:var(--pink);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+#cring{position:fixed;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(238,71,124,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s,height .25s,border-color .25s,background .25s;}
+body.chover #cring{width:54px;height:54px;border-color:var(--pink);background:rgba(238,71,124,0.08);}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;z-index:500;background:rgba(5,4,27,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--cbr);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.nav-logo{font-size:1.3rem;font-weight:700;color:var(--light);text-decoration:none;}
+.nav-logo span{color:var(--pink);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s;padding-bottom:2px;border-bottom:2px solid transparent;}
+.nav-links a:hover,.nav-links a.active{color:var(--light);border-bottom-color:var(--pink);}
+.nav-cta{background:var(--pink);color:#fff;padding:.5rem 1.25rem;border-radius:8px;text-decoration:none;font-size:.85rem;font-weight:600;border:none;font-family:inherit;transition:opacity .2s;}
+.nav-cta:hover{opacity:.85;}
+.nav-menu-btn{display:none;background:none;border:none;color:var(--light);font-size:1.4rem;}
+.mobile-nav{position:fixed;top:64px;right:0;left:0;background:var(--dark2);border-bottom:1px solid var(--cbr);z-index:499;display:none;flex-direction:column;padding:1rem 5%;}
+.mobile-nav.open{display:flex;}
+.mobile-nav a{color:var(--soft);text-decoration:none;font-size:.95rem;padding:.75rem 0;border-bottom:1px solid var(--cbr);}
+
+/* PAGE SYSTEM */
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+#page-home.active{display:flex!important;}
+
+/* HOME */
+#page-home{min-height:100vh;align-items:center;padding:80px 5% 60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 60% 50% at 75% 40%,rgba(238,71,124,.12) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 20% 60%,rgba(64,156,240,.1) 0%,transparent 70%);}
+.hero-grid{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;}
+.hero-content{position:relative;z-index:1;display:flex;align-items:center;gap:4rem;width:100%;}
+.hero-text{flex:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(238,71,124,.1);border:1px solid rgba(238,71,124,.25);border-radius:100px;padding:.4rem 1rem;font-size:.8rem;color:var(--pink);font-weight:500;margin-bottom:1.5rem;}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--pink);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.5);}}
+.hero-title{font-size:clamp(2.5rem,5vw,4rem);font-weight:700;line-height:1.2;margin-bottom:1rem;}
+.hero-title .name{color:var(--pink);}
+.hero-sub{font-size:1.1rem;color:var(--soft);line-height:1.7;max-width:500px;margin-bottom:2.5rem;}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-p{background:var(--pink);color:#fff;padding:.8rem 1.75rem;border-radius:10px;text-decoration:none;font-weight:600;font-size:.95rem;border:none;font-family:inherit;display:inline-block;transition:transform .2s,opacity .2s;}
+.btn-p:hover{transform:translateY(-2px);opacity:.9;}
+.btn-s{background:var(--cb);color:var(--light);padding:.8rem 1.75rem;border-radius:10px;text-decoration:none;font-weight:600;font-size:.95rem;border:1px solid var(--cbr);font-family:inherit;display:inline-block;transition:transform .2s,border-color .2s;}
+.btn-s:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2);}
+.hero-img-wrap{flex:0 0 340px;position:relative;}
+.hero-ring{width:320px;height:320px;border-radius:50%;border:2px solid rgba(238,71,124,.3);display:flex;align-items:center;justify-content:center;position:relative;}
+.hero-ring::before{content:'';position:absolute;inset:-12px;border-radius:50%;border:1px dashed rgba(238,71,124,.15);animation:spin 20s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hero-avatar{width:280px;height:280px;border-radius:50%;overflow:hidden;background:var(--dark3);display:flex;align-items:center;justify-content:center;}
+.hero-avatar img{width:100%;height:100%;object-fit:cover;object-position:top center;}
+.hero-ftag{position:absolute;background:var(--dark2);border:1px solid var(--cbr);border-radius:12px;padding:.6rem 1rem;font-size:.8rem;display:flex;align-items:center;gap:8px;}
+.hero-ftag.t1{top:20px;left:-30px;}
+.hero-ftag.t2{bottom:40px;left:-50px;}
+.hero-stats{display:flex;gap:3rem;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--cbr);}
+.hstat-num{font-size:2rem;font-weight:700;color:var(--pink);}
+.hstat-lbl{font-size:.8rem;color:var(--muted);margin-top:2px;}
+
+/* COMPACT HEADER ON INNER PAGES */
+.page-header{
+  padding:90px 5% 0;
+  background:linear-gradient(180deg,rgba(238,71,124,0.06) 0%,transparent 100%);
+  border-bottom:1px solid var(--cbr);
+  margin-bottom:0;
+}
+.page-header-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:1.5rem;
+  flex-wrap:wrap;gap:1rem;
+}
+.page-header-text{}
+.page-header-name{
+  font-size:1rem;font-weight:700;color:var(--light);
+  display:flex;align-items:center;gap:8px;
+}
+.page-header-name .dot{color:var(--pink);}
+.page-header-role{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.page-header-cta{
+  background:var(--pink);color:#fff;
+  padding:.4rem 1rem;border-radius:8px;
+  font-size:.8rem;font-weight:600;border:none;font-family:inherit;
+  transition:opacity .2s;white-space:nowrap;
+}
+.page-header-cta:hover{opacity:.85;}
+.page-inner{padding:32px 5% 60px;}
+.eyebrow{display:inline-block;font-size:.8rem;font-weight:600;color:var(--pink);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;}
+.sec-title{font-size:clamp(1.8rem,3.5vw,2.5rem);font-weight:700;margin-bottom:1rem;}
+.sec-sub{color:var(--muted);font-size:1rem;max-width:560px;line-height:1.7;margin-bottom:3rem;}
+
+/* ABOUT */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+.about-text p{color:var(--soft);line-height:1.85;margin-bottom:1.25rem;font-size:.95rem;}
+.highlights{display:flex;flex-direction:column;gap:.8rem;margin:1.5rem 0;}
+.hitem{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--soft);}
+.hitem i{color:var(--teal);font-size:1rem;}
+.tools-row{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.25rem;align-items:flex-end;}
+.tool-ic{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);}
+.tool-ic i{font-size:2.2rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+.stat-card{background:var(--cb);border:1px solid var(--cbr);border-radius:16px;padding:1.75rem 1.25rem;text-align:center;}
+.stat-num{font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--pink),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-lbl{font-size:.82rem;color:var(--muted);margin-top:6px;}
+
+/* PORTFOLIO */
+.pf-filters{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2.5rem;}
+.filt{padding:.5rem 1.25rem;border-radius:100px;border:1px solid var(--cbr);background:var(--cb);color:var(--muted);font-size:.85rem;font-weight:500;font-family:inherit;transition:all .2s;}
+.filt.active,.filt:hover{background:var(--pink);border-color:var(--pink);color:#fff;}
+
+/* LOGOS — no border, infinite */
+.logos-stage{overflow:hidden;position:relative;padding:2rem 0;margin-bottom:1rem;}
+.logos-stage::before,.logos-stage::after{content:'';position:absolute;top:0;bottom:0;width:140px;z-index:2;pointer-events:none;}
+.logos-stage::before{right:0;background:linear-gradient(to left,var(--dark),transparent);}
+.logos-stage::after{left:0;background:linear-gradient(to right,var(--dark),transparent);}
+.logos-track{display:flex;gap:3rem;width:max-content;animation:logoScroll 32s linear infinite;}
+.logos-track:hover{animation-play-state:paused;}
+@keyframes logoScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.logo-item{width:140px;height:140px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.logo-item img{width:100%;height:100%;object-fit:contain;transition:transform .3s,filter .3s;filter:drop-shadow(0 2px 12px rgba(0,0,0,.3));}
+.logo-item:hover img{transform:scale(1.12);filter:drop-shadow(0 0 18px rgba(238,71,124,.4));}
+
+/* POSTS */
+.pgroup{margin-bottom:2.5rem;}
+.pgroup-title{font-size:.85rem;color:var(--muted);font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.pgroup-title span{color:var(--pink);background:rgba(238,71,124,.1);border-radius:100px;padding:2px 10px;font-size:.75rem;}
+.pgroup-title::after{content:'';flex:1;height:1px;background:var(--cbr);}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+.post-card{aspect-ratio:4/3;border-radius:12px;overflow:hidden;position:relative;background:var(--dark3);}
+.post-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.post-card:hover img{transform:scale(1.05);}
+.post-overlay{position:absolute;inset:0;background:rgba(5,4,27,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;}
+.post-card:hover .post-overlay{opacity:1;}
+.post-overlay i{font-size:2rem;color:#fff;}
+.thumbs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+.thumb-card{aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--dark3);position:relative;}
+.thumb-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.thumb-card:hover img{transform:scale(1.05);}
+.thumb-ov{position:absolute;inset:0;background:rgba(5,4,27,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;}
+.thumb-card:hover .thumb-ov{opacity:1;}
+.thumb-ov i{font-size:1.5rem;color:#fff;}
+
+/* SERVICES — flip on hover */
+.srv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.5rem;}
+.srv-card{min-height:200px;border-radius:20px;border:1px solid var(--cbr);background:var(--cb);position:relative;overflow:hidden;transition:border-color .3s,transform .3s;}
+.srv-card:hover{border-color:var(--pink);transform:translateY(-5px);}
+.srv-front,.srv-back{position:absolute;inset:0;padding:2rem 1.75rem;display:flex;flex-direction:column;transition:opacity .35s,transform .35s;}
+.srv-front{align-items:flex-start;justify-content:center;gap:1rem;}
+.srv-back{align-items:flex-start;justify-content:center;background:linear-gradient(135deg,rgba(238,71,124,.1),rgba(64,156,240,.06));opacity:0;transform:translateY(10px);}
+.srv-card:hover .srv-front{opacity:0;transform:translateY(-8px);}
+.srv-card:hover .srv-back{opacity:1;transform:translateY(0);}
+.srv-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.srv-card:nth-child(1) .srv-icon{background:rgba(238,71,124,.12);color:var(--pink);}
+.srv-card:nth-child(2) .srv-icon{background:rgba(64,156,240,.12);color:var(--blue);}
+.srv-card:nth-child(3) .srv-icon{background:rgba(17,190,138,.12);color:var(--teal);}
+.srv-card:nth-child(4) .srv-icon{background:rgba(241,198,77,.12);color:var(--yellow);}
+.srv-title{font-size:1.05rem;font-weight:600;}
+.srv-desc{font-size:.88rem;color:var(--soft);line-height:1.75;}
+
+/* LAB */
+.lab-box{background:var(--cb);border:1px solid var(--cbr);border-radius:24px;padding:4rem 2rem;max-width:640px;margin:0 auto;text-align:center;position:relative;overflow:hidden;}
+.lab-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(238,71,124,.05) 0%,transparent 70%);}
+.lab-emoji{font-size:4rem;margin-bottom:1.5rem;}
+.lab-box h3{font-size:1.5rem;font-weight:700;margin-bottom:1rem;}
+.lab-box p{color:var(--muted);line-height:1.7;margin-bottom:2rem;}
+.lab-tags{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;}
+.lab-tag{background:rgba(238,71,124,.1);border:1px solid rgba(238,71,124,.2);border-radius:100px;padding:.4rem 1rem;font-size:.8rem;color:var(--pink);}
+
+/* BLOG */
+.blog-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:3rem;}
+.blog-top-text{}
+#btn-admin-login{background:rgba(255,255,255,.05);border:1px solid var(--cbr);color:var(--muted);padding:.45rem .9rem;border-radius:8px;font-size:.78rem;font-family:inherit;}
+#btn-admin-login:hover{border-color:var(--cbr);color:var(--soft);}
+.blog-admin-bar{display:none;gap:.6rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.blog-admin-bar.show{display:flex;}
+.badm-btn{display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;border-radius:8px;font-size:.82rem;font-weight:600;font-family:inherit;border:none;transition:opacity .2s;}
+.badm-btn:hover{opacity:.85;}
+.btn-pub{background:rgba(17,190,138,.15);color:var(--teal);}
+.btn-edit{background:rgba(64,156,240,.15);color:var(--blue);}
+.btn-del{background:rgba(238,71,124,.15);color:var(--pink);}
+.btn-arch{background:rgba(241,198,77,.15);color:var(--yellow);}
+.blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+.blog-card{background:var(--cb);border:1px solid var(--cbr);border-radius:20px;overflow:hidden;transition:transform .25s,border-color .25s;position:relative;}
+.blog-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.15);}
+.blog-card.archived{opacity:.45;}
+.blog-card-img{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--dark3);display:flex;align-items:center;justify-content:center;}
+.blog-card-img img{width:100%;height:100%;object-fit:cover;}
+.blog-card-img i{font-size:2.5rem;color:var(--cbr);}
+.blog-card-body{padding:1.5rem;}
+.blog-tag{display:inline-block;font-size:.75rem;font-weight:600;border-radius:6px;padding:2px 8px;margin-bottom:.75rem;}
+.blog-card-title{font-size:1rem;font-weight:600;line-height:1.5;margin-bottom:.5rem;}
+.blog-card-excerpt{font-size:.84rem;color:var(--muted);line-height:1.6;}
+.blog-card-date{font-size:.75rem;color:var(--muted);margin-top:.75rem;display:flex;align-items:center;gap:5px;}
+.arch-badge{position:absolute;top:12px;right:12px;background:rgba(241,198,77,.2);color:var(--yellow);border:1px solid rgba(241,198,77,.3);border-radius:6px;font-size:.7rem;padding:2px 8px;}
+.admin-post-actions{display:none;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;}
+.admin-post-actions.show{display:flex;}
+.apost-btn{padding:.3rem .7rem;border-radius:6px;font-size:.74rem;font-family:inherit;font-weight:600;border:none;}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+.soc-links{display:flex;flex-direction:column;gap:1rem;margin-top:1rem;}
+.soc-link{display:flex;align-items:center;gap:1rem;background:var(--cb);border:1px solid var(--cbr);border-radius:14px;padding:1rem 1.25rem;text-decoration:none;color:var(--light);transition:border-color .2s,transform .2s;}
+.soc-link:hover{border-color:rgba(255,255,255,.2);transform:translateX(-4px);}
+.soc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.soc-name{font-size:.9rem;font-weight:600;}
+.soc-handle{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.cf-box{padding:2rem;background:var(--cb);border:1px solid var(--cbr);border-radius:24px;}
+.fg{margin-bottom:1.25rem;}
+.fl{display:block;font-size:.82rem;font-weight:600;color:var(--soft);margin-bottom:.5rem;}
+.fi,.fta{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--cbr);border-radius:10px;padding:.75rem 1rem;color:var(--light);font-size:.88rem;font-family:inherit;transition:border-color .2s;resize:vertical;}
+.fi:focus,.fta:focus{outline:none;border-color:var(--pink);}
+.btn-sub{width:100%;background:var(--pink);color:#fff;padding:.9rem;border-radius:12px;border:none;font-size:1rem;font-weight:700;font-family:inherit;transition:opacity .2s;margin-top:.5rem;}
+.btn-sub:hover{opacity:.9;}
+
+/* ORDER MODAL */
+.modal-ov{position:fixed;inset:0;z-index:600;background:rgba(5,4,27,.95);backdrop-filter:blur(8px);display:flex;align-items:flex-start;justify-content:center;padding:80px 1rem 2rem;overflow-y:auto;opacity:0;visibility:hidden;transition:all .3s;}
+.modal-ov.open{opacity:1;visibility:visible;}
+.modal{background:#0d0b2e;border:1px solid var(--cbr);border-radius:24px;padding:2.5rem;width:100%;max-width:680px;position:relative;transform:translateY(20px);transition:transform .3s;}
+.modal-ov.open .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:1.25rem;left:1.25rem;background:var(--cb);border:1px solid var(--cbr);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--light);font-size:1rem;}
+.modal-close:hover{background:rgba(255,255,255,.1);}
+.modal-title{font-size:1.4rem;font-weight:700;margin-bottom:.5rem;}
+.modal-sub{font-size:.87rem;color:var(--muted);margin-bottom:2rem;}
+.tab-row{display:flex;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap;}
+.mtab{padding:.5rem 1rem;border-radius:8px;border:1px solid var(--cbr);background:var(--cb);color:var(--muted);font-size:.82rem;font-weight:500;font-family:inherit;transition:all .2s;}
+.mtab.active{background:var(--pink);border-color:var(--pink);color:#fff;}
+.fsec{display:none;}.fsec.active{display:block;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.fchecks{display:flex;flex-wrap:wrap;gap:.5rem;}
+.fchk{display:flex;align-items:center;gap:6px;background:var(--cb);border:1px solid var(--cbr);border-radius:8px;padding:.4rem .85rem;font-size:.8rem;}
+.fchk input{accent-color:var(--pink);}
+.fbudget{display:flex;flex-wrap:wrap;gap:.5rem;}
+.fbtn{padding:.45rem 1rem;border-radius:8px;border:1px solid var(--cbr);background:var(--cb);color:var(--muted);font-size:.82rem;font-family:inherit;transition:all .2s;}
+.fbtn.active{background:var(--pink);border-color:var(--pink);color:#fff;}
+.ffile{border:1px dashed var(--cbr);border-radius:10px;padding:1.25rem;text-align:center;}
+.ffile i{font-size:1.5rem;color:var(--muted);display:block;margin-bottom:.5rem;}
+.ffile p{font-size:.8rem;color:var(--muted);}
+
+/* BLOG EDITOR MODAL */
+.bmod{position:fixed;inset:0;z-index:700;background:rgba(5,4,27,.97);backdrop-filter:blur(8px);display:flex;align-items:flex-start;justify-content:center;padding:80px 1rem 2rem;overflow-y:auto;opacity:0;visibility:hidden;transition:all .3s;}
+.bmod.open{opacity:1;visibility:visible;}
+.bmod-box{background:#0d0b2e;border:1px solid var(--cbr);border-radius:24px;padding:2.5rem;width:100%;max-width:600px;position:relative;transform:translateY(20px);transition:transform .3s;}
+.bmod.open .bmod-box{transform:translateY(0);}
+
+/* ADMIN SECRET LOGIN — hidden until paste */
+#admin-secret{display:none;}
+
+/* LIGHTBOX */
+#lb{display:none;position:fixed;inset:0;z-index:3000;background:rgba(5,4,27,.96);backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+#lb img{max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain;}
+.lb-btn{position:absolute;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;width:46px;height:46px;color:#fff;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+
+/* FOOTER */
+footer{background:var(--dark);border-top:1px solid var(--cbr);padding:2.5rem 5%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.foot-brand{font-size:.95rem;color:var(--muted);}
+.foot-brand span{color:var(--pink);}
+.foot-links{display:flex;gap:1.5rem;list-style:none;}
+.foot-links a{font-size:.85rem;color:var(--muted);text-decoration:none;}
+.foot-links a:hover{color:var(--light);}
+
+/* REVEAL */
+.rev{opacity:0;transform:translateY(30px);transition:all .6s ease;}
+.rev.vis{opacity:1;transform:translateY(0);}
+
+/* MOBILE */
+@media(max-width:900px){
+  .hero-content{flex-direction:column;text-align:center;}
+  .hero-img-wrap{order:-1;}
+  .hero-sub{margin:0 auto 2rem;}
+  .hero-btns{justify-content:center;}
+  .hero-stats{justify-content:center;}
+  .hero-ftag{display:none;}
+  .about-grid,.contact-grid{grid-template-columns:1fr;}
+  .frow{grid-template-columns:1fr;}
+  .nav-links{display:none;}
+  .nav-menu-btn{display:flex;}
+}
+@media(max-width:600px){
+  .page-inner{padding:70px 4% 50px;}
+  .hero-ring{width:240px;height:240px;}
+  .hero-avatar{width:210px;height:210px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  footer{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div id="cdot"></div>
+<div id="cring"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" onclick="goPage('home')" class="nav-logo">شفيق<span>.</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#" onclick="goPage('about')" data-p="about">من أنا</a></li>
+    <li><a href="#" onclick="goPage('portfolio')" data-p="portfolio">أعمالي</a></li>
+    <li><a href="#" onclick="goPage('services')" data-p="services">خدماتي</a></li>
+    <li><a href="#" onclick="goPage('lab')" data-p="lab">المختبر</a></li>
+    <li><a href="#" onclick="goPage('blog')" data-p="blog">المدونة</a></li>
+    <li><a href="#" onclick="goPage('contact')" data-p="contact">تواصل</a></li>
+  </ul>
+  <button class="nav-cta" onclick="openOrder()">اطلب مشروع</button>
+  <button class="nav-menu-btn" onclick="document.getElementById('mnav').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+</nav>
+<div class="mobile-nav" id="mnav">
+  <a href="#" onclick="goPage('about');document.getElementById('mnav').classList.remove('open')">من أنا</a>
+  <a href="#" onclick="goPage('portfolio');document.getElementById('mnav').classList.remove('open')">أعمالي</a>
+  <a href="#" onclick="goPage('services');document.getElementById('mnav').classList.remove('open')">خدماتي</a>
+  <a href="#" onclick="goPage('lab');document.getElementById('mnav').classList.remove('open')">المختبر</a>
+  <a href="#" onclick="goPage('blog');document.getElementById('mnav').classList.remove('open')">المدونة</a>
+  <a href="#" onclick="goPage('contact');document.getElementById('mnav').classList.remove('open')">تواصل</a>
+</div>
+
+<!-- =================== HOME =================== -->
+<div id="page-home" class="page active">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-text rev">
+      <div class="hero-badge">مصمم جرافيك محترف</div>
+      <h1 class="hero-title">مرحباً، أنا<br><span class="name">شفيق جمعة</span></h1>
+      <p class="hero-sub">أُحوِّل أفكارك إلى هوية بصرية مؤثرة — شعارات، هويات بصرية، وتصاميم تسويقية تترك انطباعاً لا يُنسى.</p>
+      <div class="hero-btns">
+        <button class="btn-p" onclick="goPage('portfolio')">شاهد أعمالي</button>
+        <button class="btn-s" onclick="openOrder()">اطلب مشروع</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="hstat-num">+10</div><div class="hstat-lbl">مشاريع مُنجزة</div></div>
+        <div><div class="hstat-num">+3</div><div class="hstat-lbl">سنوات خبرة</div></div>
+        <div><div class="hstat-num">+10</div><div class="hstat-lbl">عميل راضٍ</div></div>
+      </div>
+    </div>
+    <div class="hero-img-wrap rev">
+      <div class="hero-ring">
+        <div class="hero-avatar">
+          <img src="https://drive.google.com/thumbnail?id=1eTLGlSUjxZq4UBlGR3JNmFQFJpBrbH8s&sz=w400" alt="شفيق جمعة">
+        </div>
+      </div>
+      <div class="hero-ftag t1"><i class="fas fa-palette" style="color:var(--pink)"></i><span>هوية بصرية</span></div>
+      <div class="hero-ftag t2"><i class="fas fa-star" style="color:var(--yellow)"></i><span>تصميم احترافي</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ABOUT =================== -->
+<div id="page-about" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="rev"><span class="eyebrow">من أنا</span><h2 class="sec-title">مصمم يجمع الإبداع بالاحترافية</h2></div>
+    <div class="about-grid">
+      <div class="about-text rev">
+        <p>أنا شفيق جمعة، مصمم جرافيك محترف أعمل في مجال التصميم منذ أكثر من ثلاث سنوات، أقدّم حلولاً بصرية متكاملة تجمع بين الإبداع، الدقة، والاحترافية في التنفيذ.</p>
+        <p>أمتلك خبرة عملية في تصميم الشعارات الاحترافية، الهويات البصرية المتكاملة، التصاميم التسويقية، ومنشورات التواصل الاجتماعي، مع فهم عميق لمتطلبات السوق واحتياجات الأنشطة التجارية.</p>
+        <div class="highlights">
+          <div class="hitem"><i class="fas fa-check-circle"></i>الالتزام بالمواعيد واحترام وقت العميل</div>
+          <div class="hitem"><i class="fas fa-check-circle"></i>الدقة العالية والانتباه لأدق التفاصيل</div>
+          <div class="hitem"><i class="fas fa-check-circle"></i>مرونة في التعامل وتقبّل الملاحظات</div>
+          <div class="hitem"><i class="fas fa-check-circle"></i>أعمال ذات جودة احترافية تضيف قيمة حقيقية</div>
+        </div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.9rem;">الأدوات التي أستخدمها:</p>
+        <div class="tools-row">
+          <div class="tool-ic"><i class="fas fa-layer-group" style="color:#31A8FF"></i><span>Photoshop</span></div>
+          <div class="tool-ic"><i class="fas fa-bezier-curve" style="color:#FF9A00"></i><span>Illustrator</span></div>
+          <div class="tool-ic"><i class="fas fa-book-open" style="color:var(--pink)"></i><span>InDesign</span></div>
+          <div class="tool-ic"><i class="fas fa-robot" style="color:var(--teal)"></i><span>Claude AI</span></div>
+          <div class="tool-ic"><i class="fas fa-object-group" style="color:#00C4CC"></i><span>Canva</span></div>
+        </div>
+      </div>
+      <div class="rev">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-num">+10</div><div class="stat-lbl">مشروع مُنجز</div></div>
+          <div class="stat-card"><div class="stat-num">+3</div><div class="stat-lbl">سنوات خبرة</div></div>
+          <div class="stat-card"><div class="stat-num">+10</div><div class="stat-lbl">عميل راضٍ</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== PORTFOLIO =================== -->
+<div id="page-portfolio" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="rev"><span class="eyebrow">أعمالي</span><h2 class="sec-title">معرض الأعمال</h2><p class="sec-sub">مجموعة مختارة من أبرز تصاميمي في الشعارات ومنشورات التواصل الاجتماعي والمصغرات.</p></div>
+    <div class="pf-filters rev">
+      <button class="filt active" onclick="pfFilter('logos',this)">الشعارات</button>
+      <button class="filt" onclick="pfFilter('social',this)">السوشيال ميديا</button>
+      <button class="filt" onclick="pfFilter('thumbs',this)">المصغرات</button>
+    </div>
+
+    <!-- LOGOS -->
+    <div id="pf-logos" class="pf-sec rev">
+      <div class="logos-stage">
+        <div class="logos-track" id="ltk">
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=11TjYhrvryqURUqafJIoG21qUu18Nj155&sz=w300" alt="logo 1"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1PkaXQ6LDnFnhjLBkf737cpuggOB--eXl&sz=w300" alt="logo 2"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=13NH-wBKbW54nE78kcSJVnSjf0Mma0G6O&sz=w300" alt="logo 3"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1QxMuXFgcwOSRxRw_MdnROP9ANTewkwyd&sz=w300" alt="logo 4"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1HXLpMxIOYLnLLQGJDM4imFn53kEZ3p8C&sz=w300" alt="logo 5"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=18jDUWaQFu3pYtO5mhtdXLlnPkQlMxh5M&sz=w300" alt="logo 6"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1zofGbI8lxAAxY15q47mBI_gScEpfc7lU&sz=w300" alt="logo 7"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1lk_eJpANK2vDvgiv4ELi28Mpo6viupie&sz=w300" alt="logo 8"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=1A_7S-mwiDE1BDg9ghIOXM9tCOb101Ydi&sz=w300" alt="logo 9"></div>
+          <div class="logo-item"><img src="https://drive.google.com/thumbnail?id=11TNvceeeq9YoyLlJP6HD2yJFP7c7ugoq&sz=w300" alt="logo 10"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOCIAL -->
+    <div id="pf-social" class="pf-sec" style="display:none;">
+      <div class="pgroup">
+        <div class="pgroup-title">Sarout <span>6</span></div>
+        <div class="posts-grid">
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1a9vp9MIZY3akDeT1i1rXSdqPF47Umqc4&sz=w600" alt="s1"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1H4f_0E9Vsb-voKpJ6t9dBODv0kt5NkqY&sz=w600" alt="s2"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1NkzqTA6in43RlS8ytKbPyYcaZELicJ5Z&sz=w600" alt="s3"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1-gtZgNw-fscMnTpZMQtDVxXZDajDBLtn&sz=w600" alt="s4"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1K1Vg3fr-8RuqPLi5VYG882KRA2p__y3u&sz=w600" alt="s5"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1NbCMz8zALwDnwBd1DIxy9o-AG7SkoKWe&sz=w600" alt="s6"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+        </div>
+      </div>
+      <div class="pgroup">
+        <div class="pgroup-title">nsave <span>4</span></div>
+        <div class="posts-grid">
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=15U9V9zIdMs15mluKqzzmRdI2eyZgsGTq&sz=w600" alt="n1"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1lDXvX1NYsLJnmVYtNHLqNy52K32f8r7l&sz=w600" alt="n2"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1KBUGoT_w7PZ4mqqVdODE6xtvcpoUX97X&sz=w600" alt="n3"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+          <div class="post-card"><img src="https://drive.google.com/thumbnail?id=1EgM-k8KkE2yuQDEB2B_h_DwnZZrCB1TO&sz=w600" alt="n4"><div class="post-overlay"><i class="fas fa-expand"></i></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THUMBS -->
+    <div id="pf-thumbs" class="pf-sec" style="display:none;">
+      <div class="thumbs-grid">
+        <div class="thumb-card"><img src="https://drive.google.com/thumbnail?id=1RRsepsqpEfk2t9jOzxgpSpCBy5y8dKa-&sz=w600" alt="t1"><div class="thumb-ov"><i class="fas fa-expand"></i></div></div>
+        <div class="thumb-card"><img src="https://drive.google.com/thumbnail?id=1ZPjlS3Ozwn-kSqfn9YPBqUZfDFfvtGAw&sz=w600" alt="t2"><div class="thumb-ov"><i class="fas fa-expand"></i></div></div>
+        <div class="thumb-card"><img src="https://drive.google.com/thumbnail?id=1CoMJzKBIsTSUfZUtQ8cbfLM4B1R8N0Je&sz=w600" alt="t3"><div class="thumb-ov"><i class="fas fa-expand"></i></div></div>
+        <div class="thumb-card"><img src="https://drive.google.com/thumbnail?id=107ogbRARL_8zLcKxxvvGLKvSVxqkMfnR&sz=w600" alt="t4"><div class="thumb-ov"><i class="fas fa-expand"></i></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SERVICES =================== -->
+<div id="page-services" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="rev"><span class="eyebrow">خدماتي</span><h2 class="sec-title">ماذا أقدّم لك؟</h2><p class="sec-sub">مرّر الماوس على أي خدمة لاكتشاف التفاصيل.</p></div>
+    <div class="srv-grid rev">
+      <div class="srv-card">
+        <div class="srv-front"><div class="srv-icon"><i class="fas fa-crown"></i></div><div class="srv-title">تصميم الهوية البصرية</div></div>
+        <div class="srv-back"><p class="srv-desc">شعار احترافي، لوحة ألوان، خطوط، وعناصر بصرية متكاملة تمنح علامتك التجارية هوية قوية وراسخة في ذاكرة العملاء.</p></div>
+      </div>
+      <div class="srv-card">
+        <div class="srv-front"><div class="srv-icon"><i class="fas fa-mobile-alt"></i></div><div class="srv-title">تصميم السوشيال ميديا</div></div>
+        <div class="srv-back"><p class="srv-desc">منشورات إبداعية، قوالب شهرية، وإعلانات ممولة بجودة بصرية عالية تزيد التفاعل وتُبرز حضورك الرقمي.</p></div>
+      </div>
+      <div class="srv-card">
+        <div class="srv-front"><div class="srv-icon"><i class="fas fa-print"></i></div><div class="srv-title">تصميم المواد المطبوعة</div></div>
+        <div class="srv-back"><p class="srv-desc">بطاقات أعمال، بروشورات، فلايرات، كتالوجات وقوائم أسعار بتصميم مدروس يعكس احترافية نشاطك التجاري.</p></div>
+      </div>
+      <div class="srv-card">
+        <div class="srv-front"><div class="srv-icon"><i class="fab fa-youtube"></i></div><div class="srv-title">تصميم المصغرات</div></div>
+        <div class="srv-back"><p class="srv-desc">مصغرات يوتيوب جذابة ولافتة تزيد نسبة النقر وتعكس هوية قناتك بأسلوب بصري متميز ومتسق.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== LAB =================== -->
+<div id="page-lab" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="rev"><span class="eyebrow">المختبر</span><h2 class="sec-title">مختبر التصميم ⭐</h2></div>
+
+    <!-- LAB TOOLS GRID -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem;margin-bottom:3rem;" class="rev">
+
+      <!-- ACTIVE: AI PROMPT GENERATOR -->
+      <div onclick="goLabTool('prompt')" style="background:linear-gradient(135deg,rgba(238,71,124,.15),rgba(64,156,240,.08));border:1px solid rgba(238,71,124,.3);border-radius:20px;padding:1.75rem;cursor:pointer;transition:transform .25s,box-shadow .25s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 40px rgba(238,71,124,.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+        <div style="font-size:2rem;margin-bottom:.75rem;">✨</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">مولد برومبتات AI</div>
+        <div style="font-size:.8rem;color:var(--teal);font-weight:600;margin-bottom:.5rem;">● متاح الآن</div>
+        <div style="font-size:.82rem;color:var(--muted);line-height:1.6;">أنشئ برومبتات احترافية للذكاء الاصطناعي في ثوانٍ</div>
+      </div>
+
+      <!-- COMING SOON CARDS -->
+      <div style="background:var(--cb);border:1px solid var(--cbr);border-radius:20px;padding:1.75rem;opacity:.5;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">🎨</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">مولد أفكار شعارات</div>
+        <div style="font-size:.78rem;color:var(--yellow);font-weight:600;margin-bottom:.5rem;display:inline-block;background:rgba(241,198,77,.1);border:1px solid rgba(241,198,77,.2);border-radius:100px;padding:2px 10px;">قريباً</div>
+      </div>
+      <div style="background:var(--cb);border:1px solid var(--cbr);border-radius:20px;padding:1.75rem;opacity:.5;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">🎯</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">اختيار الألوان</div>
+        <div style="font-size:.78rem;color:var(--yellow);font-weight:600;margin-bottom:.5rem;display:inline-block;background:rgba(241,198,77,.1);border:1px solid rgba(241,198,77,.2);border-radius:100px;padding:2px 10px;">قريباً</div>
+      </div>
+      <div style="background:var(--cb);border:1px solid var(--cbr);border-radius:20px;padding:1.75rem;opacity:.5;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">🔤</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">اقتراح خطوط</div>
+        <div style="font-size:.78rem;color:var(--yellow);font-weight:600;margin-bottom:.5rem;display:inline-block;background:rgba(241,198,77,.1);border:1px solid rgba(241,198,77,.2);border-radius:100px;padding:2px 10px;">قريباً</div>
+      </div>
+      <div style="background:var(--cb);border:1px solid var(--cbr);border-radius:20px;padding:1.75rem;opacity:.5;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">📦</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem;">ملفات جاهزة للتحميل</div>
+        <div style="font-size:.78rem;color:var(--yellow);font-weight:600;margin-bottom:.5rem;display:inline-block;background:rgba(241,198,77,.1);border:1px solid rgba(241,198,77,.2);border-radius:100px;padding:2px 10px;">قريباً</div>
+      </div>
+    </div>
+
+    <!-- AI PROMPT TOOL PANEL -->
+    <div id="lab-prompt-panel" style="display:none;">
+      <div style="background:var(--cb);border:1px solid var(--cbr);border-radius:24px;overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:1.75rem 2rem;border-bottom:1px solid var(--cbr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <div style="font-size:1.2rem;font-weight:700;">✨ مولد برومبت صورة كرة القدم</div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:4px;">اختر المنتخب وسيُنشأ البرومبت الاحترافي تلقائياً</div>
+          </div>
+          <button onclick="document.getElementById('lab-prompt-panel').style.display='none'" style="background:none;border:1px solid var(--cbr);border-radius:8px;color:var(--muted);padding:.4rem .8rem;font-family:inherit;font-size:.8rem;">← رجوع</button>
+        </div>
+
+        <div style="padding:2rem;">
+          <!-- Platform notice -->
+          <div style="background:rgba(64,156,240,.08);border:1px solid rgba(64,156,240,.2);border-radius:14px;padding:1rem 1.25rem;margin-bottom:2rem;display:flex;align-items:flex-start;gap:12px;">
+            <i class="fas fa-info-circle" style="color:var(--blue);margin-top:2px;flex-shrink:0;"></i>
+            <div style="font-size:.85rem;color:var(--soft);line-height:1.7;">
+              هذا البرومبت يعمل على <strong style="color:var(--blue)">Gemini</strong> و <strong style="color:var(--teal)">ChatGPT (GPT-4o)</strong> — بعد النسخ، أضف صورتك الشخصية وصورة القميص كمرفقات في المحادثة
+            </div>
+          </div>
+
+          <!-- Step 1: Choose team -->
+          <div style="margin-bottom:2rem;">
+            <div style="font-size:.9rem;font-weight:700;color:var(--light);margin-bottom:1rem;display:flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;background:var(--pink);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">1</span> اختر منتخب كرة القدم</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;" id="teamsGrid"></div>
+          </div>
+
+          <!-- Step 2: Selected team info -->
+          <div id="selectedTeamBox" style="display:none;background:rgba(238,71,124,.06);border:1px solid rgba(238,71,124,.2);border-radius:16px;padding:1.5rem;margin-bottom:2rem;">
+            <div style="font-size:.82rem;color:var(--pink);font-weight:600;margin-bottom:.75rem;">المنتخب المختار:</div>
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+              <img id="selJerseyImg" src="" style="width:80px;height:80px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.05);padding:8px;" alt="">
+              <div>
+                <div id="selTeamAr" style="font-size:1.1rem;font-weight:700;"></div>
+                <div id="selTeamEn" style="font-size:.82rem;color:var(--muted);margin-top:2px;"></div>
+              </div>
+              <a id="selJerseyDl" href="#" download style="margin-right:auto;background:rgba(17,190,138,.12);border:1px solid rgba(17,190,138,.25);color:var(--teal);padding:.5rem 1rem;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fas fa-download"></i> تحميل القميص
+              </a>
+            </div>
+          </div>
+
+          <!-- Step 3: Prompt output -->
+          <div style="margin-bottom:1rem;">
+            <div style="font-size:.9rem;font-weight:700;color:var(--light);margin-bottom:.75rem;display:flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;background:var(--blue);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">2</span> البرومبت الجاهز</div>
+            <div style="position:relative;">
+              <textarea id="promptOutput" readonly rows="14" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--cbr);border-radius:14px;padding:1.25rem;color:var(--soft);font-size:.82rem;font-family:monospace;line-height:1.7;resize:none;direction:ltr;"></textarea>
+              <div id="promptPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                <div style="text-align:center;color:var(--muted);">
+                  <i class="fas fa-futbol" style="font-size:2rem;margin-bottom:.75rem;display:block;"></i>
+                  <div style="font-size:.9rem;">اختر منتخباً أعلاه لتوليد البرومبت</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Copy button -->
+          <button id="copyBtn" onclick="copyPrompt()" disabled style="width:100%;background:var(--pink);color:#fff;padding:.9rem;border-radius:12px;border:none;font-size:1rem;font-weight:700;font-family:inherit;transition:opacity .2s;opacity:.4;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <i class="fas fa-copy"></i> نسخ البرومبت
+          </button>
+
+          <!-- After copy notice -->
+          <div id="afterCopyNote" style="display:none;margin-top:1rem;background:rgba(17,190,138,.08);border:1px solid rgba(17,190,138,.2);border-radius:12px;padding:1rem 1.25rem;">
+            <div style="font-size:.85rem;color:var(--teal);font-weight:600;margin-bottom:.5rem;"><i class="fas fa-check-circle"></i> تم نسخ البرومبت!</div>
+            <div style="font-size:.82rem;color:var(--soft);line-height:1.7;">
+              الآن افتح <strong>Gemini</strong> أو <strong>ChatGPT</strong> وأرفق:<br>
+              🖼️ <strong>صورتك الشخصية</strong> كـ Image A<br>
+              👕 <strong>قميص المنتخب</strong> كـ Image B (يمكنك تحميله أعلاه)<br>
+              ثم الصق البرومبت وأرسل.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =================== BLOG =================== -->
+<div id="page-blog" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="blog-top rev">
+      <div class="blog-top-text">
+        <span class="eyebrow">المدونة</span>
+        <h2 class="sec-title">مقالات تصميمية</h2>
+        <p class="sec-sub" style="margin-bottom:0;">محتوى يساعدك على فهم التصميم وتطوير علامتك التجارية.</p>
+      </div>
+      <!-- زر مخفي — يظهر فقط بعد إلصاق كلمة السر -->
+      <button id="btn-admin-login" onclick="openAdminLogin()" title="دخول المدير"><i class="fas fa-circle" style="font-size:.4rem;color:var(--cbr)"></i></button>
+    </div>
+    <!-- شريط أدوات المدير -->
+    <div class="blog-admin-bar" id="adminBar">
+      <button class="badm-btn btn-pub" onclick="openEditor(null)"><i class="fas fa-plus"></i> نشر مقال</button>
+      <button class="badm-btn btn-edit" onclick="openEditorSelected()"><i class="fas fa-pen"></i> تعديل</button>
+      <button class="badm-btn btn-del" onclick="deleteSelected()"><i class="fas fa-trash"></i> حذف</button>
+      <button class="badm-btn btn-arch" onclick="archiveSelected()"><i class="fas fa-archive"></i> أرشفة</button>
+      <button class="badm-btn" style="background:rgba(255,255,255,.06);color:var(--muted);margin-right:auto;" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+    </div>
+    <div class="blog-grid rev" id="blogGrid"></div>
+  </div>
+</div>
+
+<!-- =================== CONTACT =================== -->
+<div id="page-contact" class="page">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-text">
+        <div class="page-header-name">شفيق جمعة <span class="dot">●</span> مصمم جرافيك محترف</div>
+        <div class="page-header-role">Graphic Designer · Visual Identity · Social Media</div>
+      </div>
+      <button class="page-header-cta" onclick="openOrder()">اطلب مشروع</button>
+    </div>
+  </div>
+  <div class="page-inner">
+    <div class="rev"><span class="eyebrow">تواصل</span><h2 class="sec-title">تواصل معي</h2></div>
+    <div class="contact-grid">
+      <div class="rev">
+        <p style="color:var(--muted);line-height:1.7;margin-bottom:2rem;font-size:.95rem;">هل لديك مشروع في ذهنك؟ تواصل معي عبر أي من المنصات أدناه وسأكون سعيداً بمساعدتك.</p>
+        <div class="soc-links">
+          <a href="https://www.behance.net/shafiqjuma" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(17,94,237,.12);color:#1155ED"><i class="fab fa-behance"></i></div><div><div class="soc-name">Behance</div><div class="soc-handle">behance.net/shafiqjuma</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+          <a href="https://www.instagram.com/shafiq.graphics" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(238,71,124,.12);color:var(--pink)"><i class="fab fa-instagram"></i></div><div><div class="soc-name">Instagram</div><div class="soc-handle">@shafiq.graphics</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+          <a href="https://www.linkedin.com/in/shafiq-jumaa/" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(64,156,240,.12);color:var(--blue)"><i class="fab fa-linkedin-in"></i></div><div><div class="soc-name">LinkedIn</div><div class="soc-handle">shafiq-jumaa</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+          <a href="https://khamsat.com/user/shafiqgomaa" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(241,198,77,.12);color:var(--yellow)"><i class="fas fa-star"></i></div><div><div class="soc-name">خمسات</div><div class="soc-handle">shafiqgomaa</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+          <a href="https://mostaql.com/u/Shafiq_Gomaa" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(17,190,138,.12);color:var(--teal)"><i class="fas fa-briefcase"></i></div><div><div class="soc-name">مستقل</div><div class="soc-handle">Shafiq_Gomaa</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+          <a href="https://wa.me/963944575449" target="_blank" class="soc-link"><div class="soc-icon" style="background:rgba(37,211,102,.12);color:#25D366"><i class="fab fa-whatsapp"></i></div><div><div class="soc-name">واتساب</div><div class="soc-handle">+963 944 575 449</div></div><i class="fas fa-arrow-left" style="color:var(--muted);margin-right:auto"></i></a>
+        </div>
+      </div>
+      <div class="cf-box rev">
+        <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1.5rem;">أرسل رسالة مباشرة</h3>
+        <div class="fg"><label class="fl">الاسم</label><input type="text" class="fi" id="ctN" placeholder="اسمك الكريم"></div>
+        <div class="fg"><label class="fl">البريد الإلكتروني</label><input type="email" class="fi" id="ctE" dir="ltr" placeholder="email@example.com"></div>
+        <div class="fg"><label class="fl">الرسالة</label><textarea class="fta" id="ctM" rows="4" placeholder="اكتب رسالتك هنا..."></textarea></div>
+        <button class="btn-sub" onclick="sendWA()">إرسال عبر واتساب</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-brand">شفيق جمعة <span>©</span> 2026</div>
+  <ul class="foot-links">
+    <li><a href="#" onclick="goPage('services')">الخدمات</a></li>
+    <li><a href="#" onclick="goPage('portfolio')">الأعمال</a></li>
+    <li><a href="#" onclick="goPage('contact')">التواصل</a></li>
+    <li><a href="#" onclick="alert('قريباً')">سياسة الخصوصية</a></li>
+  </ul>
+</footer>
+
+<!-- =================== ORDER MODAL =================== -->
+<div class="modal-ov" id="orderModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeOrder()"><i class="fas fa-times"></i></button>
+    <h2 class="modal-title">طلب مشروع جديد</h2>
+    <p class="modal-sub">اختر نوع المشروع وأجب على الأسئلة لأستطيع خدمتك بأفضل شكل.</p>
+    <div class="tab-row">
+      <button class="mtab active" onclick="switchMTab('id',this)">الهوية البصرية</button>
+      <button class="mtab" onclick="switchMTab('sm',this)">السوشيال ميديا</button>
+      <button class="mtab" onclick="switchMTab('pr',this)">المطبوعات</button>
+      <button class="mtab" onclick="switchMTab('th',this)">المصغرات</button>
+    </div>
+    <!-- IDENTITY -->
+    <div class="fsec active" id="fsec-id">
+      <div class="frow"><div class="fg"><label class="fl">الاسم</label><input type="text" class="fi" placeholder="اسمك الكريم"></div><div class="fg"><label class="fl">البريد</label><input type="email" class="fi" dir="ltr"></div></div>
+      <div class="fg"><label class="fl">اللغة الأساسية للشعار</label><input type="text" class="fi" placeholder="عربي / إنجليزي / كلاهما"></div>
+      <div class="fg"><label class="fl">اسم العلامة التجارية</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">معنى الاسم وسبب اختياره</label><textarea class="fta" rows="2"></textarea></div>
+      <div class="fg"><label class="fl">أبرز المنافسين</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">ميزتك التنافسية</label><textarea class="fta" rows="2"></textarea></div>
+      <div class="fg"><label class="fl">الانطباع المطلوب</label><input type="text" class="fi" placeholder="فخامة / ثقة / شباب..."></div>
+      <div class="fg"><label class="fl">Slogan إن وجد</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">ألوان مفضلة / ألوان تريد تجنبها</label><textarea class="fta" rows="2"></textarea></div>
+      <div class="fg"><label class="fl">عناصر الهوية المطلوبة</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> الشعار الأساسي</label>
+        <label class="fchk"><input type="checkbox"> لوحة ألوان وخطوط</label>
+        <label class="fchk"><input type="checkbox"> مطبوعات ورقية</label>
+        <label class="fchk"><input type="checkbox"> تغليف منتجات</label>
+        <label class="fchk"><input type="checkbox"> نمط بصري</label>
+        <label class="fchk"><input type="checkbox"> أيقونات خاصة</label>
+        <label class="fchk"><input type="checkbox"> تصاميم السوشيال</label>
+        <label class="fchk"><input type="checkbox"> دليل الهوية</label>
+        <label class="fchk"><input type="checkbox"> تصميم موقع</label>
+      </div></div>
+      <div class="fg"><label class="fl">الميزانية</label><div class="fbudget">
+        <button class="fbtn" onclick="selBudget(this)">أقل من 200$</button>
+        <button class="fbtn" onclick="selBudget(this)">200$ - 500$</button>
+        <button class="fbtn" onclick="selBudget(this)">500$ - 1000$</button>
+        <button class="fbtn" onclick="selBudget(this)">أكثر من 1000$</button>
+      </div></div>
+      <div class="fg"><label class="fl">تفاصيل إضافية</label><textarea class="fta" rows="3"></textarea></div>
+      <button class="btn-sub" onclick="submitOrder(this)">إرسال عبر واتساب</button>
+    </div>
+    <!-- SOCIAL MEDIA -->
+    <div class="fsec" id="fsec-sm">
+      <div class="frow"><div class="fg"><label class="fl">الاسم</label><input type="text" class="fi"></div><div class="fg"><label class="fl">البريد</label><input type="email" class="fi" dir="ltr"></div></div>
+      <div class="fg"><label class="fl">اسم العلامة التجارية</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">نوع المحتوى</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> منشورات عادية</label>
+        <label class="fchk"><input type="checkbox"> إعلانات ممولة</label>
+        <label class="fchk"><input type="checkbox"> Stories</label>
+        <label class="fchk"><input type="checkbox"> ريلز / أغلفة فيديو</label>
+        <label class="fchk"><input type="checkbox"> قوالب شهرية</label>
+      </div></div>
+      <div class="fg"><label class="fl">المنصة</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> Instagram</label>
+        <label class="fchk"><input type="checkbox"> Facebook</label>
+        <label class="fchk"><input type="checkbox"> LinkedIn</label>
+        <label class="fchk"><input type="checkbox"> TikTok</label>
+      </div></div>
+      <div class="fg"><label class="fl">الجمهور المستهدف</label><input type="text" class="fi" placeholder="العمر - البلد - نوع العملاء"></div>
+      <div class="fg"><label class="fl">الأسلوب</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> فاخر</label>
+        <label class="fchk"><input type="checkbox"> بسيط</label>
+        <label class="fchk"><input type="checkbox"> عصري</label>
+        <label class="fchk"><input type="checkbox"> إبداعي</label>
+      </div></div>
+      <div class="fg"><label class="fl">عدد التصاميم</label><input type="text" class="fi" placeholder="10 منشورات / باقة شهرية..."></div>
+      <div class="fg"><label class="fl">الميزانية</label><div class="fbudget">
+        <button class="fbtn" onclick="selBudget(this)">أقل من 200$</button>
+        <button class="fbtn" onclick="selBudget(this)">200$ - 500$</button>
+        <button class="fbtn" onclick="selBudget(this)">500$ - 1000$</button>
+        <button class="fbtn" onclick="selBudget(this)">أكثر من 1000$</button>
+      </div></div>
+      <div class="fg"><label class="fl">تفاصيل إضافية</label><textarea class="fta" rows="3"></textarea></div>
+      <button class="btn-sub" onclick="submitOrder(this)">إرسال عبر واتساب</button>
+    </div>
+    <!-- PRINT -->
+    <div class="fsec" id="fsec-pr">
+      <div class="frow"><div class="fg"><label class="fl">الاسم</label><input type="text" class="fi"></div><div class="fg"><label class="fl">البريد</label><input type="email" class="fi" dir="ltr"></div></div>
+      <div class="fg"><label class="fl">اسم المشروع</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">نوع التصميم</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> بطاقة أعمال</label>
+        <label class="fchk"><input type="checkbox"> بروشور</label>
+        <label class="fchk"><input type="checkbox"> فلاير</label>
+        <label class="fchk"><input type="checkbox"> كتالوج</label>
+        <label class="fchk"><input type="checkbox"> بوستر</label>
+        <label class="fchk"><input type="checkbox"> Menu</label>
+        <label class="fchk"><input type="checkbox"> تغليف منتج</label>
+      </div></div>
+      <div class="fg"><label class="fl">المقاس</label><input type="text" class="fi" placeholder="A4 / A5 / مخصص"></div>
+      <div class="fg"><label class="fl">الأسلوب</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> فاخر</label>
+        <label class="fchk"><input type="checkbox"> رسمي</label>
+        <label class="fchk"><input type="checkbox"> بسيط</label>
+        <label class="fchk"><input type="checkbox"> عصري</label>
+      </div></div>
+      <div class="fg"><label class="fl">الميزانية</label><div class="fbudget">
+        <button class="fbtn" onclick="selBudget(this)">أقل من 200$</button>
+        <button class="fbtn" onclick="selBudget(this)">200$ - 500$</button>
+        <button class="fbtn" onclick="selBudget(this)">500$ - 1000$</button>
+        <button class="fbtn" onclick="selBudget(this)">أكثر من 1000$</button>
+      </div></div>
+      <div class="fg"><label class="fl">تفاصيل إضافية</label><textarea class="fta" rows="3"></textarea></div>
+      <button class="btn-sub" onclick="submitOrder(this)">إرسال عبر واتساب</button>
+    </div>
+    <!-- THUMBS -->
+    <div class="fsec" id="fsec-th">
+      <div class="frow"><div class="fg"><label class="fl">الاسم</label><input type="text" class="fi"></div><div class="fg"><label class="fl">البريد</label><input type="email" class="fi" dir="ltr"></div></div>
+      <div class="fg"><label class="fl">اسم القناة</label><input type="text" class="fi"></div>
+      <div class="fg"><label class="fl">مجال المحتوى</label><input type="text" class="fi" placeholder="تقنية / رياضة / طبخ..."></div>
+      <div class="fg"><label class="fl">عدد المصغرات</label><input type="text" class="fi" placeholder="5 مصغرات..."></div>
+      <div class="fg"><label class="fl">الأسلوب</label><div class="fchecks">
+        <label class="fchk"><input type="checkbox"> جريء ولافت</label>
+        <label class="fchk"><input type="checkbox"> بسيط ونظيف</label>
+        <label class="fchk"><input type="checkbox"> عصري</label>
+      </div></div>
+      <div class="fg"><label class="fl">الميزانية</label><div class="fbudget">
+        <button class="fbtn" onclick="selBudget(this)">أقل من 200$</button>
+        <button class="fbtn" onclick="selBudget(this)">200$ - 500$</button>
+        <button class="fbtn" onclick="selBudget(this)">500$ - 1000$</button>
+        <button class="fbtn" onclick="selBudget(this)">أكثر من 1000$</button>
+      </div></div>
+      <div class="fg"><label class="fl">تفاصيل إضافية</label><textarea class="fta" rows="3"></textarea></div>
+      <button class="btn-sub" onclick="submitOrder(this)">إرسال عبر واتساب</button>
+    </div>
+  </div>
+</div>
+
+<!-- =================== BLOG EDITOR =================== -->
+<div class="bmod" id="blogMod">
+  <div class="bmod-box">
+    <button class="modal-close" onclick="closeEditor()"><i class="fas fa-times"></i></button>
+    <h2 class="modal-title" id="editorTitle">مقال جديد</h2>
+    <input type="hidden" id="eid">
+    <div class="fg"><label class="fl">عنوان المقال</label><input type="text" class="fi" id="eTitle" placeholder="عنوان المقال"></div>
+    <div class="fg"><label class="fl">التصنيف</label><input type="text" class="fi" id="eTag" placeholder="هوية بصرية / شعارات / نصائح"></div>
+    <div class="fg"><label class="fl">مقتطف قصير</label><textarea class="fta" rows="2" id="eExcerpt" placeholder="وصف مختصر..."></textarea></div>
+    <div class="fg"><label class="fl">رابط صورة المقال (URL)</label><input type="text" class="fi" id="eImg" dir="ltr" placeholder="https://..."></div>
+    <div class="fg"><label class="fl">محتوى المقال</label><textarea class="fta" rows="8" id="eContent" placeholder="اكتب محتوى المقال هنا..."></textarea></div>
+    <button class="btn-sub" onclick="savePost()">حفظ المقال</button>
+  </div>
+</div>
+
+<!-- Blog reader -->
+<div class="bmod" id="blogReader">
+  <div class="bmod-box" style="max-width:700px;">
+    <button class="modal-close" onclick="closeBlogReader()"><i class="fas fa-times"></i></button>
+    <div id="readerContent"></div>
+  </div>
+</div>
+
+<!-- Admin secret — triggered by paste -->
+<div id="admin-secret" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(5,4,27,.98);backdrop-filter:blur(12px);align-items:center;justify-content:center;">
+  <div style="background:#0d0b2e;border:1px solid var(--cbr);border-radius:20px;padding:2.5rem;width:100%;max-width:360px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:1rem;">🔐</div>
+    <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;">دخول المدير</h3>
+    <div class="fg"><input type="password" class="fi" id="aPass" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
+    <button class="btn-sub" onclick="checkAdmin()">دخول</button>
+    <div id="aErr" style="color:var(--pink);font-size:.82rem;margin-top:.75rem;display:none;">كلمة المرور غير صحيحة</div>
+    <button onclick="document.getElementById('admin-secret').style.display='none'" style="background:none;border:none;color:var(--muted);margin-top:1rem;font-size:.85rem;font-family:inherit;display:block;margin-right:auto;margin-left:auto;">إلغاء</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lb" onclick="closeLb()">
+  <button class="lb-btn" style="position:absolute;top:1.5rem;left:1.5rem;" onclick="closeLb()"><i class="fas fa-times"></i></button>
+  <button class="lb-btn" id="lbPrev" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);" onclick="event.stopPropagation();navLb(-1)"><i class="fas fa-chevron-right"></i></button>
+  <button class="lb-btn" id="lbNext" style="position:absolute;left:1.5rem;top:50%;transform:translateY(-50%);" onclick="event.stopPropagation();navLb(1)"><i class="fas fa-chevron-left"></i></button>
+  <img id="lbImg" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
+<script>
+// ===== CURSOR =====
+const cdot=document.getElementById('cdot'),cring=document.getElementById('cring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cdot.style.left=mx+'px';cdot.style.top=my+'px';});
+(function anim(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cring.style.left=rx+'px';cring.style.top=ry+'px';requestAnimationFrame(anim);})();
+document.querySelectorAll('a,button,.srv-card,.post-card,.thumb-card,.logo-item,.blog-card,.soc-link,.filt,.mtab,.fbtn,.fchk').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('chover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('chover'));
+});
+
+// ===== PAGES =====
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  pg.classList.add('active');
+  window.scrollTo(0,0);
+  // nav active
+  document.querySelectorAll('.nav-links a').forEach(a=>{a.classList.toggle('active',a.dataset.p===id);});
+  initReveal();
+  if(id==='portfolio'){
+    setTimeout(()=>{const t=document.getElementById('ltk');if(t&&t.children.length<=10)t.innerHTML+=t.innerHTML;},80);
+  }
+  if(id==='lab') setTimeout(buildTeamsGrid,100);
+  if(id==='blog') renderBlog();
+}
+
+// ===== PORTFOLIO FILTER =====
+function pfFilter(t,btn){
+  document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pf-sec').forEach(s=>s.style.display='none');
+  document.getElementById('pf-'+t).style.display='block';
+}
+
+// ===== ORDER MODAL =====
+function openOrder(){document.getElementById('orderModal').classList.add('open');document.body.style.overflow='hidden';}
+function closeOrder(){document.getElementById('orderModal').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('orderModal').addEventListener('click',function(e){if(e.target===this)closeOrder();});
+function switchMTab(t,el){
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.fsec').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fsec-'+t).classList.add('active');
+}
+function selBudget(el){el.closest('.fbudget').querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function submitOrder(btn){
+  const f=btn.closest('.fsec');
+  let msg='مرحباً شفيق، طلب مشروع جديد:\n\n';
+  f.querySelectorAll('.fi,.fta').forEach(i=>{if(i.value.trim()){const l=i.closest('.fg')?.querySelector('.fl')?.textContent||'';msg+=(l?l+': ':'')+i.value.trim()+'\n';}});
+  f.querySelectorAll('input[type=checkbox]:checked').forEach(c=>{msg+='✓ '+c.closest('.fchk').textContent.trim()+'\n';});
+  const b=f.querySelector('.fbtn.active');if(b)msg+='\nالميزانية: '+b.textContent+'\n';
+  window.open('https://wa.me/963944575449?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ===== CONTACT =====
+function sendWA(){
+  const n=document.getElementById('ctN').value,e=document.getElementById('ctE').value,m=document.getElementById('ctM').value;
+  if(!m.trim()){alert('يرجى كتابة رسالة');return;}
+  window.open('https://wa.me/963944575449?text='+encodeURIComponent('مرحباً شفيق،\nالاسم: '+n+'\nالبريد: '+e+'\n\n'+m),'_blank');
+}
+
+// ===== BLOG DATA =====
+const PASS='shafiq2026'; // ← كلمة السر
+let isAdmin=false;
+let selectedPostId=null;
+const tagColors={'هوية بصرية':'var(--pink)','شعارات':'var(--blue)','نصائح':'var(--teal)','سوشيال ميديا':'var(--yellow)','عام':'var(--muted)'};
+
+function loadPosts(){
+  try{return JSON.parse(localStorage.getItem('sq_posts')||'[]');}catch{return [];}
+}
+function savePosts(p){localStorage.setItem('sq_posts',JSON.stringify(p));}
+
+let posts=loadPosts();
+if(!posts.length){
+  posts=[
+    {id:1,title:'كيف تختار هوية بصرية مناسبة لنشاطك؟',tag:'هوية بصرية',excerpt:'دليل عملي خطوة بخطوة لاختيار الألوان والخطوط والأسلوب المناسب لعلامتك التجارية.',content:'دليل عملي كامل هنا...',image:'',date:'2026-01-10',archived:false},
+    {id:2,title:'أبرز أخطاء تصميم الشعارات وكيف تتجنبها',tag:'شعارات',excerpt:'أكثر الأخطاء شيوعاً التي يقع فيها المصممون المبتدئون — وكيف تتفاداها من البداية.',content:'محتوى المقال...',image:'',date:'2026-01-20',archived:false},
+    {id:3,title:'10 نصائح ذهبية لكل مصمم مبتدئ',tag:'نصائح',excerpt:'نصائح من التجربة الحقيقية ستوفر عليك سنوات من التعلم بالطريقة الصعبة.',content:'محتوى المقال...',image:'',date:'2026-02-05',archived:false},
+  ];
+  savePosts(posts);
+}
+
+function renderBlog(){
+  const grid=document.getElementById('blogGrid');
+  grid.innerHTML='';
+  document.getElementById('adminBar').classList.toggle('show',isAdmin);
+  posts.forEach(p=>{
+    const tc=tagColors[p.tag]||'var(--blue)';
+    const imgH=p.image?`<img src="${p.image}" alt="">`:`<i class="fas fa-pen-nib"></i>`;
+    const archB=p.archived?`<div class="arch-badge"><i class="fas fa-archive"></i> مؤرشف</div>`:'';
+    grid.innerHTML+=`
+    <div class="blog-card${p.archived?' archived':''}" id="bc-${p.id}" onclick="readPost(${p.id})" style="position:relative;">
+      ${archB}
+      <div class="blog-card-img">${imgH}</div>
+      <div class="blog-card-body">
+        <span class="blog-tag" style="color:${tc};background:${tc}1a">${p.tag}</span>
+        <h3 class="blog-card-title">${p.title}</h3>
+        <p class="blog-card-excerpt">${p.excerpt}</p>
+        <div class="blog-card-date"><i class="fas fa-calendar-alt"></i>${p.date}</div>
+      </div>
+    </div>`;
+  });
+  // enable hover state on blog cards for cursor
+  document.querySelectorAll('.blog-card').forEach(c=>{
+    c.addEventListener('mouseenter',()=>document.body.classList.add('chover'));
+    c.addEventListener('mouseleave',()=>document.body.classList.remove('chover'));
+  });
+}
+
+function readPost(id){
+  const p=posts.find(x=>x.id===id);if(!p)return;
+  const tc=tagColors[p.tag]||'var(--blue)';
+  const imgH=p.image?`<img src="${p.image}" style="width:100%;border-radius:12px;margin-bottom:1.5rem;aspect-ratio:16/9;object-fit:cover;" alt="">`:'' ;
+  document.getElementById('readerContent').innerHTML=`
+    <span style="font-size:.78rem;font-weight:600;color:${tc};background:${tc}1a;border-radius:6px;padding:2px 8px;">${p.tag}</span>
+    <h2 style="font-size:1.5rem;font-weight:700;margin:1rem 0 .5rem;color:var(--light)">${p.title}</h2>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:1.5rem;">${p.date}</div>
+    ${imgH}
+    <div style="color:var(--soft);line-height:1.9;font-size:.95rem;white-space:pre-wrap;">${p.content}</div>`;
+  document.getElementById('blogReader').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeBlogReader(){document.getElementById('blogReader').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('blogReader').addEventListener('click',function(e){if(e.target===this)closeBlogReader();});
+
+// ===== BLOG EDITOR =====
+function openEditor(id){
+  document.getElementById('eid').value=id||'';
+  if(id){
+    const p=posts.find(x=>x.id===id);
+    document.getElementById('editorTitle').textContent='تعديل المقال';
+    document.getElementById('eTitle').value=p.title;
+    document.getElementById('eTag').value=p.tag;
+    document.getElementById('eExcerpt').value=p.excerpt;
+    document.getElementById('eImg').value=p.image||'';
+    document.getElementById('eContent').value=p.content;
+  } else {
+    document.getElementById('editorTitle').textContent='مقال جديد';
+    ['eTitle','eTag','eExcerpt','eImg','eContent'].forEach(i=>document.getElementById(i).value='');
+  }
+  document.getElementById('blogMod').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeEditor(){document.getElementById('blogMod').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('blogMod').addEventListener('click',function(e){if(e.target===this)closeEditor();});
+
+function openEditorSelected(){
+  if(!selectedPostId){alert('اختر مقالاً أولاً بالنقر عليه مع الضغط على Shift');return;}
+  openEditor(selectedPostId);
+}
+
+function savePost(){
+  const id=document.getElementById('eid').value;
+  const title=document.getElementById('eTitle').value.trim();
+  if(!title){alert('يرجى كتابة عنوان');return;}
+  const obj={title,tag:document.getElementById('eTag').value.trim()||'عام',excerpt:document.getElementById('eExcerpt').value.trim(),image:document.getElementById('eImg').value.trim(),content:document.getElementById('eContent').value.trim(),date:new Date().toISOString().split('T')[0],archived:false};
+  if(id){const i=posts.findIndex(x=>x.id==id);posts[i]={...posts[i],...obj};}
+  else{posts.unshift({id:Date.now(),...obj});}
+  savePosts(posts);closeEditor();renderBlog();
+}
+
+function deleteSelected(){
+  if(!selectedPostId){alert('اختر مقالاً أولاً بالضغط على Shift والنقر عليه');return;}
+  if(!confirm('هل أنت متأكد من الحذف؟'))return;
+  posts=posts.filter(x=>x.id!==selectedPostId);
+  selectedPostId=null;savePosts(posts);renderBlog();
+}
+function archiveSelected(){
+  if(!selectedPostId){alert('اختر مقالاً أولاً بالضغط على Shift والنقر عليه');return;}
+  const p=posts.find(x=>x.id===selectedPostId);if(!p)return;
+  p.archived=!p.archived;savePosts(posts);renderBlog();
+}
+
+// select post with Shift+click
+document.getElementById('blogGrid').addEventListener('click',function(e){
+  if(!isAdmin)return;
+  const card=e.target.closest('.blog-card');
+  if(!card||!e.shiftKey)return;
+  e.preventDefault();e.stopPropagation();
+  const id=parseInt(card.id.replace('bc-',''));
+  if(selectedPostId===id){selectedPostId=null;card.style.outline='';}
+  else{
+    document.querySelectorAll('.blog-card').forEach(c=>c.style.outline='');
+    selectedPostId=id;card.style.outline='2px solid var(--pink)';
+  }
+},{capture:true});
+
+// ===== ADMIN SECRET LOGIN (Ctrl+V trigger) =====
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='v'&&!isAdmin){
+    const active=document.getElementById('page-blog').classList.contains('active');
+    if(active){
+      e.preventDefault();
+      const sec=document.getElementById('admin-secret');
+      sec.style.display='flex';
+      setTimeout(()=>document.getElementById('aPass').focus(),100);
+      // read clipboard
+      navigator.clipboard.readText().then(t=>{
+        document.getElementById('aPass').value=t;
+      }).catch(()=>{});
+    }
+  }
+  if(e.key==='Escape'){
+    document.getElementById('admin-secret').style.display='none';
+    closeLb();closeBlogReader();closeEditor();closeOrder();
+  }
+});
+function openAdminLogin(){
+  const sec=document.getElementById('admin-secret');
+  sec.style.display='flex';
+  setTimeout(()=>document.getElementById('aPass').focus(),100);
+}
+function checkAdmin(){
+  const v=document.getElementById('aPass').value;
+  if(v===PASS){isAdmin=true;document.getElementById('admin-secret').style.display='none';renderBlog();}
+  else{document.getElementById('aErr').style.display='block';}
+}
+function adminLogout(){isAdmin=false;selectedPostId=null;renderBlog();}
+
+// ===== LIGHTBOX =====
+let lbArr=[],lbI=0;
+function openLb(imgs,i){lbArr=imgs;lbI=i;document.getElementById('lbImg').src=lbArr[lbI];document.getElementById('lb').style.display='flex';document.body.style.overflow='hidden';}
+function closeLb(){document.getElementById('lb').style.display='none';document.body.style.overflow='';}
+function navLb(d){lbI=(lbI+d+lbArr.length)%lbArr.length;document.getElementById('lbImg').src=lbArr[lbI];}
+
+// ===== REVEAL =====
+function initReveal(){
+  const obs=new IntersectionObserver(en=>{en.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:.08});
+  document.querySelectorAll('.rev:not(.vis)').forEach(el=>obs.observe(el));
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  // duplicate logos for infinite scroll
+  const ltk=document.getElementById('ltk');
+  if(ltk) ltk.innerHTML+=ltk.innerHTML;
+
+  // lightbox on post cards
+  document.querySelectorAll('.posts-grid').forEach(grid=>{
+    const cards=grid.querySelectorAll('.post-card');
+    const imgs=Array.from(cards).map(c=>c.querySelector('img')?.src).filter(Boolean);
+    cards.forEach((c,i)=>{c.style.cursor='zoom-in';c.addEventListener('click',()=>openLb(imgs,i));});
+  });
+  document.querySelectorAll('.thumb-card').forEach((c,i,all)=>{
+    const imgs=Array.from(all).map(x=>x.querySelector('img')?.src).filter(Boolean);
+    c.style.cursor='zoom-in';c.addEventListener('click',()=>openLb(imgs,i));
+  });
+  document.querySelectorAll('.logo-item').forEach((c,i,all)=>{
+    const imgs=Array.from(all).map(x=>x.querySelector('img')?.src).filter(Boolean);
+    c.style.cursor='zoom-in';c.addEventListener('click',()=>openLb(imgs,i));
+  });
+
+  initReveal();
+  renderBlog();
+  buildTeamsGrid();
+});
+
+// ===== LAB =====
+function goLabTool(tool){
+  if(tool==='prompt'){
+    const panel=document.getElementById('lab-prompt-panel');
+    panel.style.display='block';
+    setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }
+}
+
+// ===== TEAMS DATA =====
+const TEAMS=[
+  {ar:'السعودية',    en:'Saudi Arabia', flag:'🇸🇦', jersey:'18HwD0EXlP0ZMIpwuhdkEzdFjFi25lPHI'},
+  {ar:'الإمارات',   en:'UAE',           flag:'🇦🇪', jersey:'1bd7WSFa_3A2c6AfToHXvikhvDUnvN44R'},
+  {ar:'قطر',        en:'Qatar',         flag:'🇶🇦', jersey:'10LtT0jDEStR9t6zRJvAEio_4WfAQghUH'},
+  {ar:'الكويت',     en:'Kuwait',        flag:'🇰🇼', jersey:'1BWtHkoGUs-aLWW033TlaiqRU0Zg6UuVT'},
+  {ar:'البحرين',    en:'Bahrain',       flag:'🇧🇭', jersey:'1r7o0BUKU1viid-AKFBbpgtDcWNoo2Ckt'},
+  {ar:'عُمان',      en:'Oman',          flag:'🇴🇲', jersey:'12P9Ecb67ZamwXGQdf-LfSQFtrGsVzcmO'},
+  {ar:'الأردن',     en:'Jordan',        flag:'🇯🇴', jersey:'16nh_eDulZtOaqePywRAM-3zKzQQGAxin'},
+  {ar:'العراق',     en:'Iraq',          flag:'🇮🇶', jersey:'1ATK9X9YsjEvZDfxGHnXXm5ZPVEUEXNod'},
+  {ar:'سوريا',      en:'Syria',         flag:'🇸🇾', jersey:'1mjzNw3JrKmamfdCKrsSpC06qCuQrVhgw'},
+];
+
+const BASE_PROMPT=`Create a highly realistic premium cinematic football fan portrait for a social media promotional slide,
+Use Image A as the identity reference if provided, or create a realistic young football supporter if no personal image is provided. If Image A is provided, preserve the same facial identity, face shape, eyes, nose, lips, expression style, hairstyle, beard or facial hair, glasses if present, skin tone, and all recognizable features with maximum accuracy.
+Use Image B as the football jersey reference. Dress the subject in the official national team jersey from Image B, keeping the colors, collar, sleeve details, fabric texture, pattern, logo placement, crest position, and overall design recognizable in a clean, realistic, premium way. The jersey must fit naturally with athletic fabric folds, stitching, breathable texture, and no distortion.
+Create a confident, stylish football supporter pose inspired by official national team media-day portraits. The subject should stand upright, facing the camera, with a proud natural gesture that highlights the team identity. One hand may lightly touch the jersey crest while the other points naturally toward it, or the subject may hold the official 2026 FIFA World Cup ball, adidas TRIONDA, in a clean cinematic way. The pose must feel elegant, youthful, modern, believable, and anatomically correct, with relaxed shoulders, natural elbows, correct wrists, relaxed fingers, and professional hand placement.
+Add the official 2026 FIFA World Cup ball, adidas TRIONDA, as a premium visual element. The ball should appear realistic, clean, and well-integrated: held naturally, placed under one arm, or floating subtly near the foreground. It must not cover the face, jersey crest, or main body. Keep the ball design inspired by the real TRIONDA identity: white base, dynamic red, green, and blue wave-like details, glossy sports texture, and modern World Cup energy.
+Focus strongly on facial accuracy, natural expression, and clean hand anatomy. The face must stay sharp, realistic, flattering, and close to the identity reference. The expression should be calm, confident, friendly, lightly smiling, with direct eye contact and a natural head position.
+Use cinematic studio sports lighting with a premium editorial look: slightly top-front key light, soft shadows under the chin and arms, subtle rim light on the shoulders, clean facial highlights, rich contrast, and colorful atmospheric glow inspired by the {TEAM_EN} ({TEAM_AR}) national team jersey colors. The lighting should feel energetic and cinematic without looking artificial.
+Set the background as a clean minimal studio backdrop for an Instagram carousel cover. Use a modern gradient palette that harmonizes with the {TEAM_EN} ({TEAM_AR}) national team jersey colors. The background should be slightly darker or softer than the jersey so the subject stands out clearly. Add subtle stadium-light atmosphere, soft depth, and empty space on one side for Arabic headline text. No actual text inside the image.
+Final image should look like an official professional {TEAM_EN} ({TEAM_AR}) national-team media-day poster: realistic, sharp, stylish, cinematic, polished, colorful, modern, and balanced. Frame the subject from head to waist or mid-thigh, centered or slightly off-center with strong empty space for text.
+No text, no watermark, no extra objects, no duplicated logos, no body distortion, no face change, no awkward hands, no weird fingers, no exaggerated pose, no plastic skin, no cartoon style, no messy background.`;
+
+let selectedTeamIdx=null;
+
+function buildTeamsGrid(){
+  const g=document.getElementById('teamsGrid');
+  if(!g||g.children.length>0)return;
+  TEAMS.forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.id='tc-'+i;
+    div.style.cssText='background:var(--cb);border:2px solid var(--cbr);border-radius:16px;padding:1rem .75rem;display:flex;flex-direction:column;align-items:center;gap:.6rem;transition:all .25s;';
+    div.innerHTML=`
+      <div style="position:relative;width:68px;height:68px;flex-shrink:0;">
+        <img src="https://drive.google.com/thumbnail?id=${t.jersey}&sz=w200"
+          style="width:68px;height:68px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,.05);padding:6px;display:block;" alt="${t.ar}" loading="lazy">
+        <span style="position:absolute;bottom:-5px;right:-5px;font-size:1rem;line-height:1;background:var(--dark2);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">${t.flag}</span>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:.88rem;font-weight:700;color:var(--light);">${t.ar}</div>
+        <div style="font-size:.7rem;color:var(--muted);">${t.en}</div>
+      </div>`;
+    div.addEventListener('mouseenter',()=>{
+      document.body.classList.add('chover');
+      if(selectedTeamIdx!==i) div.style.borderColor='rgba(255,255,255,.2)';
+    });
+    div.addEventListener('mouseleave',()=>{
+      document.body.classList.remove('chover');
+      if(selectedTeamIdx!==i) div.style.borderColor='var(--cbr)';
+    });
+    div.addEventListener('click',()=>selectTeamCard(i));
+    g.appendChild(div);
+  });
+}
+
+function selectTeamCard(idx){
+  // reset all
+  TEAMS.forEach((_,i)=>{
+    const c=document.getElementById('tc-'+i);
+    if(c){c.style.borderColor='var(--cbr)';c.style.background='var(--cb)';}
+  });
+  selectedTeamIdx=idx;
+  const el=document.getElementById('tc-'+idx);
+  el.style.borderColor='var(--pink)';
+  el.style.background='rgba(238,71,124,.1)';
+  const t=TEAMS[idx];
+  // show info box
+  const box=document.getElementById('selectedTeamBox');
+  box.style.display='block';
+  document.getElementById('selJerseyImg').src='https://drive.google.com/thumbnail?id='+t.jersey+'&sz=w300';
+  document.getElementById('selTeamAr').textContent=t.ar+' '+t.flag;
+  document.getElementById('selTeamEn').textContent=t.en;
+  document.getElementById('selJerseyDl').href='https://drive.google.com/uc?export=download&id='+t.jersey;
+  // generate prompt
+  const prompt=BASE_PROMPT.replaceAll('{TEAM_EN}',t.en).replaceAll('{TEAM_AR}',t.ar);
+  document.getElementById('promptOutput').value=prompt;
+  document.getElementById('promptPlaceholder').style.display='none';
+  // enable copy btn
+  const btn=document.getElementById('copyBtn');
+  btn.disabled=false;btn.style.opacity='1';
+  document.getElementById('afterCopyNote').style.display='none';
+}
+
+function copyPrompt(){
+  const txt=document.getElementById('promptOutput').value;
+  if(!txt)return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.innerHTML='<i class="fas fa-check"></i> تم النسخ!';
+    btn.style.background='var(--teal)';
+    document.getElementById('afterCopyNote').style.display='block';
+    document.getElementById('afterCopyNote').scrollIntoView({behavior:'smooth',block:'nearest'});
+    setTimeout(()=>{btn.innerHTML='<i class="fas fa-copy"></i> نسخ البرومبت';btn.style.background='var(--pink)';},3000);
+  }).catch(()=>{
+    const ta=document.getElementById('promptOutput');ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    alert('تم النسخ! يمكنك الآن لصق البرومبت.');
+  });
+}
+</script>
+</body>
+</html>
