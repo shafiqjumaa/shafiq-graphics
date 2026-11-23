@@ -1,4 +1,4 @@
-const CACHE='playhub-v1.8.0';
+const CACHE='playhub-v1.9.0';
 const LOCAL=['./','./index.html','./games/race.html'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(LOCAL).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(n=>n.startsWith('playhub-')&&n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim()});
