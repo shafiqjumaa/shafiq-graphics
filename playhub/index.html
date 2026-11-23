@@ -198,6 +198,8 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
       else byId('roomProgress').classList.add('hidden');
       document.body.style.overflow='hidden';
       const src=new URL('games/'+gameFile(id)+'.html',location.href);
+      // Cache-bust the Paper Conquest iframe so old installed/PWA copies do not run stale collision rules.
+      if(id==='paper')src.searchParams.set('v','immortal-20261123-2');
       if(id==='2048'||id==='sudoku')src.searchParams.set('game',id);
       if(room)src.searchParams.set('room',room);
       if(id==='race' && action==='create'){const rc=raceSettings();src.searchParams.set('map',rc.map);src.searchParams.set('mode',rc.mode)}
