@@ -83,7 +83,7 @@
     const safeId=(id)=>games.find(g=>g.id===id)?id:null;
     const gameFile=id=>id==='2048'||id==='sudoku'?'numbers':id;
     const isPublic=()=>/^https?:$/.test(location.protocol)&& !/^(localhost|127\.0\.0\.1|appassets\.androidplatform\.net)$/i.test(location.hostname);
-    const getBase=()=>{let base=store.get('ph_public_url','').trim();if(isPublic())base=location.href;try{let u=new URL(base);if(!['https:','http:'].includes(u.protocol))return null;u.search='';u.hash='';return u}catch{return null}};
+    const getBase=()=>{let base=store.get('ph_public_url','').trim()||'https://shafiqjumaa.github.io/shafiq-graphics/playhub/';if(isPublic())base=location.href;try{let u=new URL(base);if(!['https:','http:'].includes(u.protocol))return null;u.search='';u.hash='';return u}catch{return null}};
     const urlFor=(game,room)=>{let u=getBase();if(!u)return null;u.searchParams.set('game',game);u.searchParams.set('room',room);return u.toString()};
     const toast=msg=>{let e=byId('toast');e.textContent=msg;e.classList.add('show');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>e.classList.remove('show'),3100)};
     const normalizeCode=s=>String(s||'').replace(/[٠-٩]/g,ch=>String(ch.charCodeAt(0)-0x660)).replace(/[۰-۹]/g,ch=>String(ch.charCodeAt(0)-0x6f0)).replace(/[\u200e\u200f\s]/g,'').trim();
