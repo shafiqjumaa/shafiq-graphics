@@ -1,4 +1,4 @@
-const CACHE='playhub-v2.3-paper-immortal';
+const CACHE='playhub-v2.4-link-invites';
 const LOCAL=['./','./index.html','./games/race.html','./games/conquest.html'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(LOCAL).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(n=>n.startsWith('playhub-')&&n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim()});
