@@ -88,6 +88,7 @@ function ntfyUrl(t){return 'https://ntfy.sh/'+(t===DISCOVERY_TOPIC?'ph_race_publ
 async function connectHttps(){
  const url=ntfyUrl(topic),abort=new AbortController(),tm=setTimeout(()=>abort.abort(),6500);
  try{const r=await fetch(url+'/json?poll=1&since=1s',{signal:abort.signal,cache:'no-store'});if(!r.ok)throw Error('HTTPS '+r.status)}finally{clearTimeout(tm)}
+ const probe=await fetch(url,{method:'POST',body:JSON.stringify({v:1,type:'probe',room,id:me.id,ts:Date.now()})});if(!probe.ok)throw Error('HTTPS إرسال '+probe.status);
  function ingest(line){
   try{const e=JSON.parse(line);if(e.event!=='message'||!e.message)return;if(e.id&&ntfySeen.has(e.id))return;
    if(e.id){ntfySeen.add(e.id);if(ntfySeen.size>500)ntfySeen.delete(ntfySeen.values().next().value)}
@@ -213,8 +214,8 @@ function resetNetwork(){
  client=null;connected=false;activeServer=1;room='';host='';roster=[];finished={};topic='';role='solo';
 }
 function connect(){return new Promise((resolve,reject)=>{if(!window.mqtt?.connect){reject(new Error('خدمة الاتصال غير متاحة، تأكد من الإنترنت'));return}
-  const opts={clientId:'ph_race_'+randomToken(8),clean:true,keepalive:25,reconnectPeriod:1600,connectTimeout:12000};client=window.mqtt.connect(RACE_SERVERS[activeServer].url,opts);
-  let done=false;const timeout=setTimeout(()=>{if(!done){done=true;reject(new Error('انتهت مهلة اتصال خادم السباق'))}},14500);
+  const opts={clientId:'ph_race_'+randomToken(8),clean:true,keepalive:25,reconnectPeriod:1600,connectTimeout:7500};client=window.mqtt.connect(RACE_SERVERS[activeServer].url,opts);
+  let done=false;const timeout=setTimeout(()=>{if(!done){done=true;reject(new Error('انتهت مهلة اتصال خادم السباق'))}},9500);
   client.on('connect',()=>{connected=true;client.subscribe(topic,{qos:1},e=>{if(e){if(!done){done=true;clearTimeout(timeout);reject(e)}}else{if(!done){done=true;clearTimeout(timeout);resolve()}if(role!=='solo')emit('hello',{name:me.name,slot:me.slot,car:me.car,paint:me.paint})}})});
   client.on('message',(t,p)=>{if(t!==topic)return;try{const m=JSON.parse(p.toString());if(m.v!==1||m.room!==room||m.id===me.id||m.ts<timestamp()-30000||Math.abs(m.ts-timestamp())>60000)return;receive(m)}catch(e){}});
   client.on('close',()=>{connected=false;if(phase==='race'||phase==='lobby')notify('الاتصال ضعيف — نحاول إعادة الاتصال بالخادم')});client.on('error',()=>{});
@@ -676,7 +677,7 @@ addEventListener('blur',()=>{for(const key of Object.keys(k))k[key]=false;docume
 const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'gas',KeyW:'gas',ArrowDown:'brake',KeyS:'brake',Space:'nitro',ShiftLeft:'nitro'};addEventListener('keydown',e=>{if(e.code==='KeyR'&&phase==='race'){e.preventDefault();recoverCar();return}if(keys[e.code]){e.preventDefault();k[keys[e.code]]=true}});addEventListener('keyup',e=>{if(keys[e.code]){e.preventDefault();k[keys[e.code]]=false}});
 $('recoverBtn').onclick=recoverCar;
 $('pauseBtn').onclick=()=>{if(role!=='solo'){notify('الإيقاف المؤقت غير متاح أثناء اللعب الجماعي');return}if(phase==='race'){phase='paused';setPanel('<h1>السباق متوقف</h1><p class="muted">اضغط متابعة للعودة إلى الحلبة.</p><button class="cta" id="resume">متابعة السباق</button><button class="cta alt" id="quit">خروج</button>');$('resume').onclick=()=>{phase='race';hidePanel()};$('quit').onclick=menu}else if(phase==='paused'){phase='race';hidePanel()}};
-function applySession(msg){if(!msg||msg.type!=='playhub-session'||msg.game!=='race')return;if(sessionId===msg.session&&phase!=='menu')return;sessionId=msg.session||randomToken(6);const map=mapDefs[msg.map]?msg.map:'city',mode=modes[msg.mode]?msg.mode:'duo';cfg.map=map;cfg.mode=mode;if(msg.action==='create')createRoom({map,mode,session:sessionId});else if(msg.action==='join'&&/^[123]-\d{6}$/.test(msg.room||''))joinRoom(msg.room)}
+function applySession(msg){if(!msg||msg.type!=='playhub-session'||msg.game!=='race')return;if(sessionId===msg.session&&phase!=='menu')return;sessionId=msg.session||randomToken(6);const map=mapDefs[msg.map]?msg.map:'city',mode=modes[msg.mode]?msg.mode:'duo';cfg.map=map;cfg.mode=mode;if(msg.action==='create')createRoom({map,mode,serverChoice:msg.serverChoice||serverChoice,session:sessionId});else if(msg.action==='join'&&/^[123]-\d{6}$/.test(msg.room||''))joinRoom(msg.room)}
 addEventListener('message',e=>{if(!fromHub()||e.source!==window.parent)return;if(e.data?.type==='playhub-ping'){ready();return}applySession(e.data)});
 const query=new URLSearchParams(location.search);
 if(!fromHub()&&query.get('room')){joinRoom(query.get('room'))}else if(!fromHub()&&query.get('action')==='create'){cfg.map=mapDefs[query.get('map')]?query.get('map'):'city';cfg.mode=modes[query.get('mode')]?query.get('mode'):'duo';createRoom(cfg)}else showMenu();
