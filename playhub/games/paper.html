@@ -338,13 +338,13 @@
 
           <div class="flex items-center gap-2">
             <div class="h-px flex-1 bg-white/10"></div>
-            <span class="text-xs text-slate-400 font-bold">أو انضم برمز الغرفة</span>
+            <span class="text-xs text-slate-400 font-bold">أو افتح رابط دعوة صديقك</span>
             <div class="h-px flex-1 bg-white/10"></div>
           </div>
 
           <div class="flex gap-2">
-            <input id="joinCodeInput" type="text" inputmode="numeric" maxlength="5" placeholder="أدخل الرمز (5 أرقام)"
-              class="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-900/90 border border-white/15 text-center tracking-[0.25em] font-black text-base text-sky-300 placeholder:tracking-normal placeholder:font-medium placeholder:text-sm focus:outline-none focus:border-sky-400" />
+            <input id="joinCodeInput" type="url" inputmode="url" placeholder="الصق رابط الدعوة هنا"
+              class="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-900/90 border border-white/15 text-center font-black text-sm text-sky-300 placeholder:tracking-normal placeholder:font-medium placeholder:text-sm focus:outline-none focus:border-sky-400" />
             <button id="joinRoomBtn" type="button" class="btn-arcade btn-purple px-5 py-2.5 rounded-2xl text-sm font-black text-white shrink-0">
               انضمام
             </button>
@@ -355,12 +355,12 @@
         <div id="onlineRoomView" class="hidden space-y-3">
           <div class="bg-gradient-to-l from-sky-900/50 to-indigo-900/50 border border-sky-400/30 rounded-2xl p-3.5 flex items-center justify-between gap-2">
             <div>
-              <div class="text-[11px] text-sky-200 font-bold">رمز الغرفة الخاصة</div>
-              <div id="roomCodeDisplay" class="text-2xl sm:text-3xl font-black tracking-[0.22em] text-white font-mono">00000</div>
+              <div class="text-[11px] text-sky-200 font-bold">رابط دعوتك الخاص</div>
+              <div id="roomCodeDisplay" class="text-xs sm:text-sm font-bold text-white break-all" dir="ltr">جاري تجهيز الرابط...</div>
             </div>
             <div class="flex items-center gap-2">
               <button id="copyRoomCodeBtn" type="button" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow">
-                <span>📋</span><span>نسخ الرمز</span>
+                <span>🔗</span><span>نسخ الرابط</span>
               </button>
               <button id="leaveRoomBtn" type="button" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/40 text-rose-200 text-xs font-extrabold transition">
                 خروج
@@ -2864,6 +2864,29 @@
       }[s]));
     }
 
+    // The room identifier is still used internally, but players share only a direct URL.
+    function paperInviteUrl() {
+      if (!uiState.roomCode) return '';
+      const base = new URL('https://shafiqjumaa.github.io/shafiq-graphics/playhub/');
+      base.searchParams.set('game', 'paper');
+      base.searchParams.set('room', hubCode());
+      return base.toString();
+    }
+    function parsePaperInvite(value) {
+      try {
+        const u = new URL(String(value || '').trim());
+        if (u.protocol !== 'https:' || u.hostname !== 'shafiqjumaa.github.io' ||
+            !u.pathname.replace(/\\/+$/, '/').endsWith('/shafiq-graphics/playhub/')) return null;
+        if (u.searchParams.get('game') !== 'paper') return null;
+        const match = /^([123])-(\\d{5})$/.exec(u.searchParams.get('room') || '');
+        return match ? {server:match[1], code:match[2]} : null;
+      } catch { return null; }
+    }
+    function showPaperInvite() {
+      const el = document.getElementById('roomCodeDisplay');
+      if (el) el.textContent = paperInviteUrl();
+    }
+
     async function createOnlineRoom() {
       sound.playClick();
       const btn = document.getElementById('createRoomBtn');
@@ -2890,7 +2913,7 @@
         lastSeen: Date.now()
       }];
 
-      document.getElementById('roomCodeDisplay').textContent = code;
+      showPaperInvite();
       document.getElementById('onlineSetupView').classList.add('hidden');
       document.getElementById('onlineRoomView').classList.remove('hidden');
       document.getElementById('hostStartOnlineBtn').classList.remove('hidden');
@@ -2906,11 +2929,13 @@
 
     async function joinOnlineRoom() {
       sound.playClick();
-      const code = document.getElementById('joinCodeInput').value.replace(/\D/g, '').trim();
-      if (code.length !== 5) {
-        showToast('يرجى إدخال رمز غرفة صحيح مكوّن من 5 أرقام', 'warn');
+      const invite = parsePaperInvite(document.getElementById('joinCodeInput').value);
+      if (!invite) {
+        showToast('الصق رابط الدعوة الصحيح الذي أرسله لك المضيف', 'warn');
         return;
       }
+      const code = invite.code;
+      transport.setPreferredServer(({1:'emqx',2:'hivemq',3:'ntfy'})[invite.server]);
       const btn = document.getElementById('joinRoomBtn');
       btn.disabled = true;
       const myName = document.getElementById('playerNameInput').value.trim() || 'صديق';
@@ -2927,7 +2952,7 @@
       uiState.roomCode = code;
       uiState.roomPlayers = [];
 
-      document.getElementById('roomCodeDisplay').textContent = code;
+      showPaperInvite();
       document.getElementById('onlineSetupView').classList.add('hidden');
       document.getElementById('onlineRoomView').classList.remove('hidden');
       document.getElementById('hostStartOnlineBtn').classList.add('hidden');
@@ -3391,8 +3416,9 @@
     document.getElementById('copyRoomCodeBtn').addEventListener('click', () => {
       sound.playClick();
       if (!uiState.roomCode) return;
-      const ok = copyTextSafe(uiState.roomCode);
-      showToast(ok ? `تم نسخ رمز الغرفة: ${uiState.roomCode}` : `رمز الغرفة هو: ${uiState.roomCode}`, 'success');
+      const url = paperInviteUrl();
+      const ok = copyTextSafe(url);
+      showToast(ok ? 'تم نسخ رابط الدعوة المباشر، أرسله لصديقك' : 'تعذر نسخ الرابط، يمكنك نسخه من الحقل', ok ? 'success' : 'warn');
     });
 
     // شريط الإيموجي السريع
@@ -3460,12 +3486,18 @@
       transport.setPreferredServer(b==='1'?'emqx':b==='2'?'hivemq':b==='3'?'ntfy':'auto');
       await createOnlineRoom();
     }
+    function paperInviteUrlFromCode(code) {
+      const u = new URL('https://shafiqjumaa.github.io/shafiq-graphics/playhub/');
+      u.searchParams.set('game','paper');
+      u.searchParams.set('room',code);
+      return u.toString();
+    }
     async function hubJoin(code){
       const match=/^([123])-(\d{5})$/.exec(String(code||''));
       if(!match){hubNotify('playhub-error',{message:'رابط احتلال المساحات غير صحيح'});return}
       hubOpenOnlineTab();
       transport.setPreferredServer(({1:'emqx',2:'hivemq',3:'ntfy'})[match[1]]);
-      document.getElementById('joinCodeInput').value=match[2];
+      document.getElementById('joinCodeInput').value=paperInviteUrlFromCode(code);
       await joinOnlineRoom();
     }
     function hubApplySession(m){
