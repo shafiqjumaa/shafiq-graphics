@@ -168,19 +168,42 @@ function renderServers(){
   info.append(title,document.createElement('br'),detail,document.createElement('br'),badge);row.append(info,button);list.append(row);
  }
 }
+
 function showServerBrowse(){
- resetNetwork();phase='browse';
- setPanel('<div class="eyebrow">PLAYHUB LIVE • SERVER BROWSER</div><h1>السيرفرات والغرف المفتوحة</h1><p class="muted">اختر السيرفر الذي يستخدمه المتسابقون.</p>'+serverPickerHtml()+'<div class="serverTools"><span id="serversStatus">جاري البحث...</span><button class="cta alt" id="refreshServers" style="width:auto;padding:9px 13px">تحديث</button></div><div class="serverList" id="serverList"></div><button class="cta" id="createPublicRace">إنشاء غرفة عامة</button><button class="cta alt" id="exitServers">العودة</button>');
- $('refreshServers').onclick=renderServers;$('exitServers').onclick=()=>{stopServerBrowse();showMenu()};$('createPublicRace').onclick=()=>{stopServerBrowse();createRoom({map:cfg.map,mode:cfg.mode==='solo'?'duo':cfg.mode,publicRoom:true})};
- bindBroker(()=>{stopServerBrowse();showServerBrowse()});renderServers();discoveryRefresh=setInterval(renderServers,3500);
- let attempts=0;const attach=()=>{
+ resetNetwork();phase='browse';visibleServers.clear();
+ setPanel('<div class="eyebrow">PLAYHUB LIVE • SERVER BROWSER</div><h1>الغرف والسيرفرات المفتوحة</h1><p class="muted">اختر السيرفر الذي تستعمله الغرفة. ضيف الرابط يختار السيرفر تلقائياً.</p>'+serverPickerHtml()+'<div class="serverTools"><span id="serversStatus">جاري البحث عن الغرف...</span><button class="cta alt" id="refreshServers" style="width:auto;padding:9px 13px">تحديث</button></div><div class="serverList" id="serverList"></div><button class="cta" id="createPublicRace">إنشاء غرفة عامة</button><button class="cta alt" id="exitServers">العودة</button>');
+ bindBroker(()=>{stopServerBrowse();showServerBrowse()});
+ $('refreshServers').onclick=()=>{stopServerBrowse();showServerBrowse()};
+ $('exitServers').onclick=()=>{stopServerBrowse();showMenu()};
+ $('createPublicRace').onclick=()=>{stopServerBrowse();createRoom({map:cfg.map,mode:cfg.mode==='solo'?'duo':cfg.mode,publicRoom:true,serverChoice})};
+ renderServers();discoveryRefresh=setInterval(renderServers,3500);
+ const n=serverChoice==='auto'?1:Number(serverChoice),status=$('serversStatus');
+ const parse=(raw)=>{
+  if(phase!=='browse')return;
+  try{const m=JSON.parse(typeof raw==='string'?raw:raw.toString());
+    if(m.kind!=='playhub-public-race'||!new RegExp('^'+n+'-\\d{6}$').test(m.room)||!mapDefs[m.map]||!modes[m.mode]||!Number.isInteger(m.players)||m.players<1||m.players>4||m.max!==modes[m.mode].max||Math.abs(timestamp()-m.updated)>16000)return;
+    visibleServers.set(m.room,m);renderServers();
+  }catch(e){}
+ };
+ if(n===3){
+  const url=ntfyUrl(DISCOVERY_TOPIC),seen=new Set();let es=null,poll=0;
+  const ingest=line=>{try{const e=JSON.parse(line);if(e.event!=='message'||!e.message)return;if(e.id&&seen.has(e.id))return;if(e.id){seen.add(e.id);if(seen.size>350)seen.delete(seen.values().next().value)}parse(e.message)}catch(x){}};
+  try{es=new EventSource(url+'/sse?since=4s');es.onmessage=e=>ingest(e.data)}catch(e){}
+  poll=setInterval(async()=>{try{const r=await fetch(url+'/json?poll=1&since=8s',{cache:'no-store'});if(r.ok)for(const line of (await r.text()).split('\n'))if(line.trim())ingest(line)}catch(e){}},3000);
+  discoveryClient={end:()=>{if(es)es.close();clearInterval(poll)}};
+  if(status)status.textContent='استعراض الغرف • سيرفر 3 HTTPS';
+  return;
+ }
+ let attempts=0;
+ const attach=()=>{
   if(phase!=='browse'||discoveryClient)return;
-  if(!window.mqtt?.connect){if(attempts++<25)setTimeout(attach,350);else if($('serversStatus'))$('serversStatus').textContent='تعذّر تحميل مكتبة الاتصال';return;}
-  discoveryClient=window.mqtt.connect(RACE_SERVERS[serverChoice==='auto'||serverChoice==='3'?1:Number(serverChoice)].url,{clientId:'ph_discovery_'+randomToken(9),clean:true,reconnectPeriod:1800,connectTimeout:10000});
-  discoveryClient.on('connect',()=>{if(phase==='browse'){discoveryClient.subscribe(DISCOVERY_TOPIC,{qos:0});const a=$('serversStatus');if(a)a.textContent='متصل بالخادم • استعراض الغرف'}});
-  discoveryClient.on('message',(topic,payload)=>{if(topic!==DISCOVERY_TOPIC)return;try{const m=JSON.parse(payload.toString());if(m.kind!=='playhub-public-race'||!/^1-\d{6}$/.test(m.room)||!mapDefs[m.map]||!modes[m.mode]||!Number.isInteger(m.players)||m.players<1||m.players>4||m.max!==modes[m.mode].max||Math.abs(timestamp()-m.updated)>16000)return;visibleServers.set(m.room,m);renderServers()}catch(e){}});
-  discoveryClient.on('error',()=>{const a=$('serversStatus');if(a)a.textContent='تعذّر الاتصال بالسيرفر • إعادة محاولة'});
- };attach()
+  if(!window.mqtt?.connect){if(attempts++<25){setTimeout(attach,350);return}if(status)status.textContent='مكتبة الاتصال غير متاحة';return}
+  const c=window.mqtt.connect(RACE_SERVERS[n].url,{clientId:'ph_discovery_'+randomToken(9),clean:true,reconnectPeriod:2400,connectTimeout:8500});
+  discoveryClient=c;
+  c.on('connect',()=>{if(phase==='browse')c.subscribe(DISCOVERY_TOPIC,{qos:0});if(status)status.textContent='متصل • '+RACE_SERVERS[n].name});
+  c.on('message',(topic,payload)=>{if(topic===DISCOVERY_TOPIC)parse(payload)});
+  c.on('error',()=>{if(status)status.textContent='الاتصال غير متاح؛ غيّر السيرفر'});
+ };attach();
 }
 
 function resetNetwork(){
