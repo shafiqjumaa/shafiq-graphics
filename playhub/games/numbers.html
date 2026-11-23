@@ -2052,7 +2052,12 @@ button, input:where([type='button'], [type='reset'], [type='submit']), ::file-se
             0%, 100% { box-shadow: 0 6px 20px -4px rgba(16, 185, 129, 0.45); }
             50% { box-shadow: 0 8px 30px -2px rgba(16, 185, 129, 0.85); }
         }
-    </style>
+  
+  /* PlayHub embedded controls: make the game size selectors reliably clickable. */
+  #modeView { position: relative; z-index: 2; pointer-events: auto; }
+  #modeView button, #modeView .opt-2048-size { pointer-events: auto !important; cursor: pointer; touch-action: manipulation; }
+  #modeView .opt-2048-size:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+  </style>
 </head>
 <body class="flex flex-col relative">
 
@@ -5293,11 +5298,30 @@ button, input:where([type='button'], [type='reset'], [type='submit']), ::file-se
             el.choose2048Btn.addEventListener('click', () => { Sound.click(); openModeSelector('2048'); });
             el.chooseSudokuBtn.addEventListener('click', () => { Sound.click(); openModeSelector('sudoku'); });
 
+            // Use pointerup as the primary gesture so selection works reliably in
+            // embedded Chromium/WebView; click remains the keyboard/accessibility fallback.
+            function bindReliableActivation(element, callback) {
+                let lastPointerAt = 0;
+                element.style.touchAction = 'manipulation';
+                element.style.pointerEvents = 'auto';
+                element.addEventListener('pointerup', event => {
+                    if (event.pointerType === 'mouse' && event.button !== 0) return;
+                    lastPointerAt = Date.now();
+                    callback(event);
+                });
+                element.addEventListener('click', event => {
+                    if (Date.now() - lastPointerAt < 650) return;
+                    callback(event);
+                });
+            }
+
             el.opt2048Sizes.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    app.solo2048Size = Number(btn.dataset.size2048);
-                    Sound.click();
+                bindReliableActivation(btn, () => {
+                    const size = Number(btn.dataset.size2048);
+                    if (size !== 4 && size !== 5) return;
+                    app.solo2048Size = size;
                     updateModeOptionPills();
+                    try { Sound.click(); } catch(e) { console.warn('Sound unavailable',e); }
                 });
             });
 
@@ -5333,14 +5357,24 @@ button, input:where([type='button'], [type='reset'], [type='submit']), ::file-se
                 });
             });
 
-            el.startSoloBtn.addEventListener('click', () => {
-                Sound.click();
-                cleanupOnline(false);
-                if (app.selectedGame === '2048') {
-                    start2048Game({ isOnline: false, size: app.solo2048Size });
-                } else {
-                    startSudokuGame({ isOnline: false, difficulty: app.soloSudokuDiff });
+            bindReliableActivation(el.startSoloBtn, () => {
+                if (el.startSoloBtn.dataset.launching === '1') return;
+                el.startSoloBtn.dataset.launching = '1';
+                try {
+                    cleanupOnline(false);
+                    if (app.selectedGame === '2048') {
+                        start2048Game({ isOnline: false, size: app.solo2048Size === 5 ? 5 : 4 });
+                    } else {
+                        startSudokuGame({ isOnline: false, difficulty: app.soloSudokuDiff });
+                    }
+                    try { Sound.click(); } catch(e) {}
+                } catch (error) {
+                    console.error('Failed to start solo game:', error);
+                    showToast('تعذر بدء اللعبة: ' + (error.message || 'خطأ غير معروف'), 'rose', 5000);
+                    el.startSoloBtn.dataset.launching = '';
+                    return;
                 }
+                setTimeout(() => { el.startSoloBtn.dataset.launching = ''; }, 400);
             });
 
             el.openOnlineFromModeBtn.addEventListener('click', () => {
