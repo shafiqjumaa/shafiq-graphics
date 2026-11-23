@@ -207,15 +207,15 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
       document.body.style.overflow='hidden';
       const src=new URL('games/'+gameFile(id)+'.html',location.href);
       // Cache-bust the Paper Conquest iframe so old installed/PWA copies do not run stale collision rules.
-      if(id==='paper')src.searchParams.set('v','invite-link-20261123');
+      if(id==='paper')src.searchParams.set('v','invite-link-live-20261123-3');
       if(id==='2048'||id==='sudoku')src.searchParams.set('game',id);
       if(room)src.searchParams.set('room',room);
       if(id==='race' && action==='create'){const rc=raceSettings();src.searchParams.set('map',rc.map);src.searchParams.set('mode',rc.mode)}
       if(action==='create')src.searchParams.set('action','create');
       const frame=byId('gameFrame');frame.dataset.game=id;frame.dataset.room=room||'';frame.dataset.action=state.action;frame.dataset.session=state.session;
       // External HTML in web builds, or embedded srcdoc in the standalone/APK build.
-      if(window.PLAYHUB_EMBEDDED){frame.srcdoc=window.PLAYHUB_EMBEDDED[gameFile(id)]}
-      else {frame.src=src.toString()}
+      if(!isPublic() && window.PLAYHUB_EMBEDDED){frame.srcdoc=window.PLAYHUB_EMBEDDED[gameFile(id)]}
+      else {frame.removeAttribute('srcdoc');frame.src=src.toString()}
       store.set('ph_recent',id);
     }
     function closeGame(){
