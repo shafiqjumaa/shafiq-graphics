@@ -2876,9 +2876,9 @@
       try {
         const u = new URL(String(value || '').trim());
         if (u.protocol !== 'https:' || u.hostname !== 'shafiqjumaa.github.io' ||
-            !u.pathname.replace(/\\/+$/, '/').endsWith('/shafiq-graphics/playhub/')) return null;
+            !u.pathname.replace(/\/+$/, '/').endsWith('/shafiq-graphics/playhub/')) return null;
         if (u.searchParams.get('game') !== 'paper') return null;
-        const match = /^([123])-(\\d{5})$/.exec(u.searchParams.get('room') || '');
+        const match = /^([123])-(\d{5})$/.exec(u.searchParams.get('room') || '');
         return match ? {server:match[1], code:match[2]} : null;
       } catch { return null; }
     }
