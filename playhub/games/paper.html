@@ -1591,6 +1591,10 @@
         // قائمة الإقصاءات لهذه الخطوة: Map<victimId, {killerId, reason}>
         const eliminations = new Map();
         const markElim = (victimId, killerId, reason) => {
+          // Immortal named player must never enter the collision/elimination queue:
+          // queuing him would skip his movement even though eliminatePlayer later refuses death.
+          const victim = this.getPlayer(victimId);
+          if (victim && isShafiq(victim.name)) return;
           if (!eliminations.has(victimId)) {
             eliminations.set(victimId, { killerId, reason });
           }
