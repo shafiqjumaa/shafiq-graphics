@@ -147,7 +147,7 @@ function incoming(m){if(roomRole==='host'){
  if(m.t==='start'&&state!=='game'){roster=m.roster||roster;roomCap=m.count;duration=m.duration;mySlot=roster.find(x=>x.id===meId)?.slot||mySlot}
  if(m.t==='state'&&['lobby','awaiting','game'].includes(state)){const me=roster.find(x=>x.id===meId);if(me)mySlot=me.slot;applySnapshot(m)}
  }}
-function applySession(m){if(!m||m.type!=='playhub-session'||m.game!=='conquest')return;if(m.session&&m.session===session&&state!=='menu')return;session=m.session||makeId();if(m.action==='join'&&m.room)joinRoom(m.room);else if(m.action==='create')createRoom({cap:2,duration:prefs.round,server:m.serverChoice||prefs.server});}
+function applySession(m){if(!m||m.type!=='playhub-session'||m.game!=='conquest')return;if(m.session&&m.session===session&&state!=='menu')return;session=m.session||makeId();if(m.action==='join'&&m.room)joinRoom(m.room);else if(m.action==='create')createRoom({cap:Math.min(4,Math.max(2,Number(m.cap)||2)),duration:Number(m.duration)===900?900:600,server:m.serverChoice||prefs.server});}
 addEventListener('message',e=>{if(!fromHub()||e.source!==parent)return;const msg=e.data;if(msg?.type==='playhub-ping'){report('playhub-ready');return}applySession(msg)});
 function boot(){ensureDimensions();const search=new URLSearchParams(location.search);if(!fromHub()&&search.get('room'))joinRoom(search.get('room'));else menu();report('playhub-ready')}
 let uiTimer=setInterval(()=>{if(state==='game')updateUi()},300);
