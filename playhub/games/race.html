@@ -50,12 +50,12 @@ const CAR_PALETTE=['#31e6d2','#ffb24f','#b796ff','#ff6488','#4da3ff','#f5e8d3','
 const GARAGE_KEY='ph_race_garage_v15';
 function validPaint(value){return /^#[0-9a-f]{6}$/i.test(String(value))?value.toLowerCase():'#31e6d2'}
 function savedGarage(){try{const v=JSON.parse(localStorage.getItem(GARAGE_KEY)||'{}');return {car:CAR_TYPES[v.car]?v.car:'sport',paint:validPaint(v.paint)}}catch{return {car:'sport',paint:'#31e6d2'}}}
-const STORAGE='ph_race_player_v1';
 function randomToken(n=12){const a=new Uint8Array(n);if(crypto?.getRandomValues)crypto.getRandomValues(a);else for(let i=0;i<n;i++)a[i]=Math.random()*256;return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('').slice(0,n*2)}
 function randomRoom(){return '1-'+String(100000+Math.floor(Math.random()*900000))}
-let id=sessionStorage.getItem(STORAGE);if(!id){id=randomToken(8);sessionStorage.setItem(STORAGE,id)}
+// Each opened invite gets a distinct player identity, even in duplicated tabs.
+const id=randomToken(16);
 const me={id,name:'متسابق '+id.slice(0,4),slot:0,team:0,...savedGarage()};
-let cfg={map:'city',mode:'solo',laps:3},room='',host='',role='solo',phase='menu',roster=[],client=null,connected=false,topic='',sessionId='',lastRosterAt=0,heartbeat=0,lastSend=0,startAt=0,lastOnlineAt=0,finished={},raceEndAt=0,disconnectTimer=0,fullSince=0;
+let cfg={map:'city',mode:'solo',laps:3},room='',host='',role='solo',phase='menu',roster=[],client=null,connected=false,topic='',sessionId='',lastRosterAt=0,heartbeat=0,lastSend=0,startAt=0,lastOnlineAt=0,finished={},raceEndAt=0,disconnectTimer=0,fullSince=0,rosterRevision=0,lastSeenRevision=-1;
 let lastBumpAt=-9999;
 let THREE=null,scene=null,renderer=null,camera=null,track=null,terrain=null,car3d=null,remoteCars=new Map(),obstacles=[],anim=0,lastTick=0,gameTime=0,renderReady=false,sceneBuildVersion=0,impactShownAt=-9999,roadFallbackMaterials=null;
 const k={left:false,right:false,gas:false,brake:false,nitro:false},motion={x:0,z:0,heading:0,speed:0,steering:0,nitro:100,t:0,lap:1,lastIndex:0,checkpoints:0,completed:false,finishTime:0};
@@ -78,39 +78,127 @@ function garageInit(){const car=$('garageCar'),paint=$('garagePaint');if(!car||!
 function showMenu(){setPanel(`<div class="eyebrow">PLAYHUB / 3D RACING</div><h1>سباق السرعة <span style="color:var(--teal)">3D</span></h1><p class="muted">6 حلبات • اختيار سيارة ولون • نيترو • سباقات فردية وجماعية حتى أربعة لاعبين</p>${garageHtml()}<div class="row"><div><label for="raceMap">الحلبة</label><select class="select" id="raceMap">${Object.entries(mapDefs).map(([id,m])=>`<option value="${id}" ${cfg.map===id?'selected':''}>${m.name}</option>`).join('')}</select></div><div><label for="raceMode">نمط السباق</label><select class="select" id="raceMode">${Object.entries(modes).map(([id,m])=>`<option value="${id}" ${cfg.mode===id?'selected':''}>${m.label}</option>`).join('')}</select></div></div><button class="cta" id="quickStart">ابدأ السباق</button><p class="small">على الكمبيوتر: A و◀ لليسار، D و▶ لليمين، W للتسارع، S للفرامل، Space للنيترو. على الجوال استخدم أزرار الشاشة.</p><p class="small">حلبة العوائق المستقيمة سباق سرعة من نقطة بداية إلى نهاية، مع حواجز ومخاريط وبراميل ومطبات. حلبة كيني تستعمل نماذج Kenney جاهزة (MIT) وتحميلها يحتاج الإنترنت.</p>`);garageInit();$('quickStart').onclick=()=>{cfg.map=$('raceMap').value;cfg.mode=$('raceMode').value;if(cfg.mode==='solo')solo();else createRoom({map:cfg.map,mode:cfg.mode})}}
 function makeLinkPreview(){return `<div class="eyebrow">رابط الدعوة المباشر</div><div class="roomLink" id="linkPreview">${room?baseLink():'...'}</div><button id="sendLink" class="cta">↗ مشاركة الرابط فقط</button>`}
 function lobby(){phase='lobby';const count=modes[cfg.mode]?.max||2;let show=(roster.length||1);
-setPanel(`<div class="lobby-top"><span>${role==='host'?'أنت منشئ الغرفة':'أنت ضيف'}</span><span>متصل ${show} / ${count}</span></div><div class="eyebrow" style="margin-top:14px">SHIFT RACING • ONLINE</div><h1>بانتظار المتسابقين</h1><p class="muted">${mapDefs[cfg.map].name} · ${modes[cfg.mode].label}<br>عند اكتمال العدد تبدأ الجولة تلقائياً، بدون خطوات إضافية.</p>${garageHtml()}<div class="roster">${Array.from({length:count},(_,i)=>{const p=roster.find(x=>x.slot===i);return `<div class="rosterLine"><span class="rosterColor" style="background:#${(roster.find(x=>x.slot===i)?.paint||('#'+colors[i%4].toString(16).padStart(6,'0'))).slice(1)}"></span>${p?(p.id===me.id?'أنت':escapeHtml(p.name)):'مكان فارغ — ينتظر لاعباً'}${cfg.mode==='team'?` <span class="small" style="margin-right:auto">فريق ${i%2+1}</span>`:''}</div>`}).join('')}</div>${makeLinkPreview()}<div id="readyStatus">اختر سيارتك ولونك قبل بدء الجولة</div><button id="leaveRoom" class="cta alt">العودة للبوابة</button>`);garageInit();$('sendLink').onclick=share;$('leaveRoom').onclick=()=>{resetNetwork();showMenu()};$('hudMap').textContent=mapDefs[cfg.map].name}
+setPanel(`<div class="lobby-top"><span>${role==='host'?'أنت منشئ الغرفة':'أنت ضيف'}</span><span>متصل <bdi dir="ltr">${show} / ${count}</bdi></span></div><div class="eyebrow" style="margin-top:14px">SHIFT RACING • ONLINE</div><h1>بانتظار المتسابقين</h1><p class="muted">${mapDefs[cfg.map].name} · ${modes[cfg.mode].label}<br>عند اكتمال العدد تبدأ الجولة تلقائياً، بدون خطوات إضافية.</p>${garageHtml()}<div class="roster">${Array.from({length:count},(_,i)=>{const p=roster.find(x=>x.slot===i);return `<div class="rosterLine"><span class="rosterColor" style="background:#${(roster.find(x=>x.slot===i)?.paint||('#'+colors[i%4].toString(16).padStart(6,'0'))).slice(1)}"></span>${p?(p.id===me.id?'أنت':escapeHtml(p.name)):'مكان فارغ — ينتظر لاعباً'}${cfg.mode==='team'?` <span class="small" style="margin-right:auto">فريق ${i%2+1}</span>`:''}</div>`}).join('')}</div>${makeLinkPreview()}<div id="readyStatus">اختر سيارتك ولونك قبل بدء الجولة</div><button id="leaveRoom" class="cta alt">العودة للبوابة</button>`);garageInit();$('sendLink').onclick=share;$('leaveRoom').onclick=()=>{resetNetwork();showMenu()};$('hudMap').textContent=mapDefs[cfg.map].name}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,v=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[v]))}
 const timestamp=()=>Date.now();
-function emit(type,extra={}){if(!client?.connected||!topic)return;const m={v:1,type,id:me.id,room,ts:timestamp(),...extra};client.publish(topic,JSON.stringify(m),{qos:0,retain:false})}
+function emit(type,extra={}){if(!client?.connected||!topic)return;const m={v:1,type,id:me.id,room,ts:timestamp(),...extra};client.publish(topic,JSON.stringify(m),{qos:type==='position'?0:1,retain:false})}
 function parentMsg(type,extra={}){if(fromHub())window.parent.postMessage({type,game:'race',...extra},'*')}
 function err(message){parentMsg('playhub-error',{session:sessionId,message});notify(message);setPanel(`<h1>تعذّر الاتصال</h1><p class="muted">${escapeHtml(message)}</p><button class="cta" id="tryAgain">إعادة المحاولة</button><button class="cta alt" id="goBack">العودة</button>`);$('tryAgain').onclick=()=>role==='host'?createRoom(cfg):joinRoom(room);$('goBack').onclick=menu}
 function ready(){parentMsg('playhub-ready')}
-function resetNetwork(){fullSince=0;clearInterval(heartbeat);clearTimeout(disconnectTimer);heartbeat=0;if(client){try{client.end(true)}catch{}}client=null;connected=false;room='';host='';roster=[];finished={};topic='';role='solo'}
+const presences=new Map(),confirmed=new Map();
+function resetNetwork(){
+ fullSince=0;rosterRevision=0;lastSeenRevision=-1;presences.clear();confirmed.clear();
+ clearInterval(heartbeat);clearTimeout(disconnectTimer);heartbeat=0;
+ if(client){try{if(role==='guest'&&client.connected)emit('leave');client.end(true)}catch{}}
+ client=null;connected=false;room='';host='';roster=[];finished={};topic='';role='solo';
+}
 function connect(){return new Promise((resolve,reject)=>{if(!window.mqtt?.connect){reject(new Error('خدمة الاتصال غير متاحة، تأكد من الإنترنت'));return}
   const opts={clientId:'ph_race_'+randomToken(8),clean:true,keepalive:25,reconnectPeriod:1600,connectTimeout:12000};client=window.mqtt.connect('wss://broker.emqx.io:8084/mqtt',opts);
   let done=false;const timeout=setTimeout(()=>{if(!done){done=true;reject(new Error('انتهت مهلة اتصال خادم السباق'))}},14500);
-  client.on('connect',()=>{connected=true;client.subscribe(topic,{qos:0},e=>{if(e){if(!done){done=true;clearTimeout(timeout);reject(e)}}else{if(!done){done=true;clearTimeout(timeout);resolve()}if(role!=='solo')emit('hello',{name:me.name,slot:me.slot,car:me.car,paint:me.paint})}})});
+  client.on('connect',()=>{connected=true;client.subscribe(topic,{qos:1},e=>{if(e){if(!done){done=true;clearTimeout(timeout);reject(e)}}else{if(!done){done=true;clearTimeout(timeout);resolve()}if(role!=='solo')emit('hello',{name:me.name,slot:me.slot,car:me.car,paint:me.paint})}})});
   client.on('message',(t,p)=>{if(t!==topic)return;try{const m=JSON.parse(p.toString());if(m.v!==1||m.room!==room||m.id===me.id||m.ts<timestamp()-30000||Math.abs(m.ts-timestamp())>60000)return;receive(m)}catch(e){}});
-  client.on('close',()=>{connected=false;if(phase==='race')notify('اتصال اللعب غير مستقر — يحاول إعادة الاتصال')});client.on('error',()=>{});
+  client.on('close',()=>{connected=false;if(phase==='race'||phase==='lobby')notify('الاتصال ضعيف — نحاول إعادة الاتصال بالخادم')});client.on('error',()=>{});
  })}
 async function createRoom(settings={}){resetNetwork();cfg.map=mapDefs[settings.map]?settings.map:cfg.map;cfg.mode=modes[settings.mode]?settings.mode:'duo';if(cfg.mode==='solo'){solo();return}cfg.laps=3;role='host';host=me.id;room=randomRoom();topic='playhub/racing/v1/'+room;roster=[{id:me.id,name:me.name,slot:0,team:0,car:me.car,paint:me.paint}];me.slot=0;sessionId=settings.session||sessionId;phase='connecting';setPanel(`<div class="eyebrow">SERVER CONNECTION</div><h1>جاري إنشاء السباق...</h1><p class="muted">تأسيس غرفة واحدة على الخادم، دون ظهور شاشة إنشاء ثانية.</p>`);
 try{await connect();lobby();parentMsg('playhub-room',{room,session:sessionId});publishLobby();beginHeartbeat()}catch(e){err(String(e.message||e))}}
-async function joinRoom(code){resetNetwork();role='guest';room=String(code||'').trim();if(!/^1-\d{6}$/.test(room)){err('رابط السباق غير صالح');return}topic='playhub/racing/v1/'+room;phase='connecting';setPanel('<h1>جاري دخول السباق...</h1><p class="muted">ندخلك إلى الغرفة مباشرة عبر الرابط دون إنشاء غرفة أخرى.</p>');try{await connect();phase='lobby';setPanel('<h1>بانتظار منشئ السباق...</h1><p class="muted">تم الاتصال بالخادم. نبحث عن تفاصيل الغرفة.</p>');parentMsg('playhub-room',{room,session:sessionId});beginHeartbeat();disconnectTimer=setTimeout(()=>{if(!host&&phase==='lobby')err('تعذّر العثور على الغرفة. قد يكون المنشئ غادر أو انتهى السباق.')},12500)}catch(e){err(String(e.message||e))}}
-function beginHeartbeat(){clearInterval(heartbeat);heartbeat=setInterval(()=>{if(!connected)return;emit('hello',{name:me.name,slot:me.slot,car:me.car,paint:me.paint});if(role==='host'){pruneRoster();publishLobby();if(phase==='lobby'&&roster.length>=modes[cfg.mode].max){if(!fullSince)fullSince=timestamp();const status=$('readyStatus');if(status)status.textContent='تجهّز للسباق: '+Math.max(0,Math.ceil((6000-(timestamp()-fullSince))/1000))+' ث';if(timestamp()-fullSince>=6000)startRace()}else if(role==='host')fullSince=0}}
-,1400)}
-const presences=new Map();function pruneRoster(){if(role!=='host')return;const now=timestamp();roster=roster.filter(p=>p.id===me.id||(now-(presences.get(p.id)||0)<7000));if(!roster.some(p=>p.id===me.id))roster.unshift({id:me.id,name:me.name,slot:0,team:0,car:me.car,paint:me.paint})}
-function publishLobby(){if(role!=='host')return;emit('lobby',{cfg,host:me.id,roster,phase,startAt});}
-function receive(m){if(m.type==='hello'){if(role==='host'){
-   presences.set(m.id,timestamp());const existing=roster.find(p=>p.id===m.id);if(existing){existing.car=CAR_TYPES[m.car]?m.car:'sport';existing.paint=validPaint(m.paint)}if(!existing&&phase==='lobby'&&roster.length<modes[cfg.mode].max){const slots=new Set(roster.map(p=>p.slot));let slot=0;while(slots.has(slot))slot++;roster.push({id:m.id,name:String(m.name||'لاعب').slice(0,22),slot,team:slot%2,car:CAR_TYPES[m.car]?m.car:'sport',paint:validPaint(m.paint)});publishLobby();lobby()}
- }return}
- if(m.type==='lobby'&&role==='guest'){host=m.host;if(m.id!==host)return;const prev=roster.length;roster=Array.isArray(m.roster)?m.roster.slice(0,4):[];const c=m.cfg||{};cfg={map:mapDefs[c.map]?c.map:'city',mode:modes[c.mode]?c.mode:'duo',laps:3};const p=roster.find(p=>p.id===me.id);if(p){me.slot=p.slot;me.team=p.team}else{emit('hello',{name:me.name,car:me.car,paint:me.paint})}
-  if(m.phase==='countdown'||m.phase==='race'){if(m.startAt){startAt=m.startAt;if(phase!=='countdown'&&phase!=='race')beginCountdown()}return}
-  if(phase==='lobby'&&roster.length!==prev)lobby();else if(phase==='lobby'&&prev===0)lobby();return}
+async function joinRoom(code){resetNetwork();role='guest';room=String(code||'').trim();if(!/^1-\d{6}$/.test(room)){err('رابط السباق غير صالح');return}topic='playhub/racing/v1/'+room;phase='connecting';setPanel('<h1>جاري دخول السباق...</h1><p class="muted">ندخلك إلى الغرفة مباشرة عبر الرابط دون إنشاء غرفة أخرى.</p>');try{await connect();phase='lobby';setPanel('<h1>بانتظار منشئ السباق...</h1><p class="muted">تم الاتصال بالخادم. نبحث عن تفاصيل الغرفة.</p>');parentMsg('playhub-room',{room,session:sessionId});beginHeartbeat();disconnectTimer=setTimeout(()=>{if(!roster.some(p=>p.id===me.id)&&phase==='lobby')err('لم يؤكّد خادم السباق انضمامك للغرفة. تحقق من أن المنشئ ما زال متصلاً وأعد المحاولة.')},30000)}catch(e){err(String(e.message||e))}}
+
+function beginHeartbeat(){
+ clearInterval(heartbeat);
+ heartbeat=setInterval(()=>{
+  if(!connected)return;
+  if(role==='guest'){
+   emit('hello',{name:me.name,slot:me.slot,car:me.car,paint:me.paint});
+   if(roster.some(p=>p.id===me.id))emit('ready',{host,revision:lastSeenRevision});
+  }
+  if(role==='host'){
+   pruneRoster();publishLobby();
+   const required=modes[cfg.mode].max;
+   const complete=roster.length===required;
+   const allAcked=complete&&roster.every(p=>p.id===me.id||(confirmed.has(p.id)&&timestamp()-confirmed.get(p.id)<12000));
+   if(phase==='lobby'&&allAcked){
+    if(!fullSince)fullSince=timestamp();
+    const status=$('readyStatus');
+    if(status)status.textContent='الجميع متصلون — الانطلاق خلال '+Math.max(0,Math.ceil((6000-(timestamp()-fullSince))/1000))+' ث';
+    if(timestamp()-fullSince>=6000)startRace();
+   } else if(phase==='lobby'){
+    fullSince=0;
+    const status=$('readyStatus');
+    if(status){
+      const ackCount=roster.filter(p=>p.id===me.id||(confirmed.has(p.id)&&timestamp()-confirmed.get(p.id)<12000)).length;
+      status.textContent=complete?'ننتظر تأكيد اتصال اللاعبين ('+ackCount+'/'+required+')':'بانتظار اكتمال المتسابقين';
+    }
+   }
+  }
+ },1400);
+}
+function pruneRoster(){
+ if(role!=='host'||phase!=='lobby')return;
+ const now=timestamp(),old=roster.length;
+ roster=roster.filter(p=>p.id===me.id||(now-(presences.get(p.id)||0)<30000));
+ const ids=new Set(roster.map(p=>p.id));
+ for(const pid of confirmed.keys())if(!ids.has(pid))confirmed.delete(pid);
+ if(roster.length!==old){fullSince=0;lobby()}
+}
+function publishLobby(){if(role!=='host')return;emit('lobby',{cfg,host:me.id,roster,phase,startAt,revision:++rosterRevision})}
+function sendWelcome(playerId){if(role!=='host')return;emit('welcome',{to:playerId,cfg,host:me.id,roster,phase,startAt,revision:rosterRevision})}
+function receive(m){
+ if(m.type==='hello'){
+  if(role==='host'){
+   presences.set(m.id,timestamp());
+   const existing=roster.find(p=>p.id===m.id);
+   if(existing){
+    existing.car=CAR_TYPES[m.car]?m.car:'sport';existing.paint=validPaint(m.paint);
+    existing.name=String(m.name||existing.name).slice(0,22);
+   }else if(phase==='lobby'&&roster.length<modes[cfg.mode].max){
+    const slots=new Set(roster.map(p=>p.slot));let slot=0;while(slots.has(slot))slot++;
+    roster.push({id:m.id,name:String(m.name||'لاعب').slice(0,22),slot,team:slot%2,car:CAR_TYPES[m.car]?m.car:'sport',paint:validPaint(m.paint)});
+    fullSince=0;publishLobby();lobby();
+   }else if(phase==='lobby'&&roster.length>=modes[cfg.mode].max){emit('full',{to:m.id});return}
+   if(roster.some(p=>p.id===m.id))sendWelcome(m.id);
+  }
+  return;
+ }
+ if(m.type==='leave'&&role==='host'){
+  const old=roster.length;roster=roster.filter(p=>p.id!==m.id);presences.delete(m.id);confirmed.delete(m.id);
+  if(roster.length!==old){fullSince=0;publishLobby();if(phase==='lobby')lobby()}
+  return;
+ }
+ if(m.type==='ready'&&role==='host'){
+  if(m.host===me.id&&roster.some(p=>p.id===m.id)){presences.set(m.id,timestamp());confirmed.set(m.id,timestamp())}
+  return;
+ }
+ if(m.type==='full'&&role==='guest'&&m.to===me.id){err('الغرفة ممتلئة. اطلب رابط غرفة جديدة من منشئ السباق.');return}
+ if(m.type==='welcome'&&role==='guest'){
+  if(m.to!==me.id||m.id!==m.host)return;
+  receiveLobby(m);return;
+ }
+ if(m.type==='lobby'&&role==='guest'){if(m.id!==m.host)return;receiveLobby(m);return}
  if(m.type==='start'&&role==='guest'&&m.id===host){const c=m.cfg||{};cfg.map=mapDefs[c.map]?c.map:'city';cfg.mode=modes[c.mode]?c.mode:'duo';cfg.laps=3;roster=Array.isArray(m.roster)?m.roster:roster;const slot=roster.find(x=>x.id===me.id)?.slot;if(slot==null)return;me.slot=slot;me.team=slot%2;startAt=m.startAt;beginCountdown();return}
  if(m.type==='position'&&phase==='race'&&m.id!==me.id){if(!roster.some(p=>p.id===m.id))return;setRemotePos(m.id,m);return}
  if(m.type==='finish'){finished[m.id]=Number(m.elapsed)||0;showEndMaybe();return}
 }
-function startRace(){if(role!=='host'||phase!=='lobby'||roster.length<modes[cfg.mode].max)return;startAt=timestamp()+7000;phase='countdown';emit('start',{startAt,cfg,roster});publishLobby();beginCountdown()}
+
+function receiveLobby(m){
+ if(role!=='guest'||m.id!==m.host)return;
+ const rev=Number(m.revision)||0;
+ if(lastSeenRevision>rev)return;lastSeenRevision=rev;
+ host=m.host;clearTimeout(disconnectTimer);
+ const previous=roster.map(p=>p.id+':'+p.slot+':'+p.car+':'+p.paint).join('|');
+ roster=Array.isArray(m.roster)?m.roster.slice(0,4):[];
+ const c=m.cfg||{};
+ cfg={map:mapDefs[c.map]?c.map:'city',mode:modes[c.mode]?c.mode:'duo',laps:3};
+ const p=roster.find(p=>p.id===me.id);
+ if(p){me.slot=p.slot;me.team=p.team;emit('ready',{host,revision:rev})}
+ else emit('hello',{name:me.name,car:me.car,paint:me.paint});
+ if(m.phase==='countdown'||m.phase==='race'){
+  if(m.startAt&&p){startAt=m.startAt;if(phase!=='countdown'&&phase!=='race')beginCountdown()}
+  return;
+ }
+ const next=roster.map(p=>p.id+':'+p.slot+':'+p.car+':'+p.paint).join('|');
+ if(phase==='lobby'&&(previous!==next||!$('sendLink')))lobby();
+}
+function startRace(){if(role!=='host'||phase!=='lobby'||roster.length!==modes[cfg.mode].max||!roster.every(p=>p.id===me.id||(confirmed.has(p.id)&&timestamp()-confirmed.get(p.id)<12000)))return;startAt=timestamp()+7000;phase='countdown';emit('start',{startAt,cfg,roster});publishLobby();beginCountdown()}
 function solo(){resetNetwork();cfg.mode='solo';role='solo';roster=[{id:me.id,name:me.name,slot:0,car:me.car,paint:me.paint}];me.slot=0;startAt=timestamp()+3300;beginCountdown()}
 let startedCountdown=false;async function beginCountdown(){if(phase==='race')return;if(startedCountdown)return;startedCountdown=true;phase='countdown';hidePanel();$('hud').classList.remove('hidden');$('mini').classList.remove('hidden');$('controls').classList.remove('hidden');$('raceBanner').classList.remove('hidden');
 try{await ensure3D();buildScene();resetMotion();if(role==='host')publishLobby();}catch(e){startedCountdown=false;err('تعذر عرض السباق ثلاثي الأبعاد: '+(e.message||e));return}
