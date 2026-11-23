@@ -132,7 +132,7 @@
     const shareText=async(text,url)=>{const link=url||text;if(!link){toast('رابط الدعوة غير متاح');return}if(window.Android&&typeof Android.shareText==='function'){Android.shareText(link);return}if(navigator.share){try{await navigator.share({title:'الانضمام مباشرة إلى اللعبة',url:link});return}catch(e){if(e.name==='AbortError')return}}if(await copy(link))toast('تم نسخ الرابط المباشر. أرسله لصديقك');else toast('تعذر نسخ الرابط')};
     function cardHtml(g){let fav=favs().includes(g.id);return `<article class="game-card" data-game="${g.id}"><div class="game-cover" style="--cover1:${g.cover1};--cover2:${g.cover2};--cover-glow:${g.glow}">${svg[g.icon]}<button type="button" class="favorite ${fav?'on':''}" data-fav="${g.id}" title="إضافة للمفضلة" aria-label="إضافة للمفضلة">${fav?'★':'☆'}</button></div><div class="game-info"><span class="game-badge">${g.category}</span><h3>${g.title}</h3><p>${g.desc}</p><div class="game-bottom"><button class="play" data-play="${g.id}">ابدأ اللعب</button><span class="mode">${g.mode}</span></div></div></article>`}
     function renderCards(){
-      byId('featuredGrid').innerHTML=games.slice(0,3).map(cardHtml).join('');
+      byId('featuredGrid').innerHTML=games.slice(0,2).concat(games.find(g=>g.id==='race')).map(cardHtml).join('');
       byId('gamesGrid').innerHTML=games.map(cardHtml).join('');
       const fs=favs();byId('favoritesGrid').innerHTML=games.filter(g=>fs.includes(g.id)).map(cardHtml).join('');
       byId('emptyFav').classList.toggle('hidden',fs.length>0);
