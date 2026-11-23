@@ -88,12 +88,12 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
           <div id="paperOptions" class="race-options wide hidden"><div class="field wide"><label for="paperHubBroker">سيرفر احتلال المساحات</label><select id="paperHubBroker"><option value="auto">⚡ تلقائي</option><option value="1">1 — EMQX</option><option value="2">2 — HiveMQ</option><option value="3">3 — HTTPS (احتياطي)</option></select></div></div>
           <div id="conquestOptions" class="race-options wide hidden"><div class="field"><label for="conquestPlayers">عدد القادة</label><select id="conquestPlayers"><option value="2">لاعبان</option><option value="3">3 لاعبين</option><option value="4">4 لاعبين</option></select></div><div class="field"><label for="conquestDuration">مدة الجولة</label><select id="conquestDuration"><option value="600">10 دقائق</option><option value="900">15 دقيقة</option></select></div><div class="field wide"><label for="conquestBroker">سيرفر المعركة</label><select id="conquestBroker"><option value="auto">⚡ تلقائي</option><option value="1">EMQX</option><option value="2">HiveMQ</option></select></div></div>
           <button type="button" id="createRoomHub" class="btn primary wide">＋ إنشاء غرفة جديدة</button>
-          <div class="form-divider wide"><span>أو انضم باستخدام كود</span></div>
-          <div class="field wide"><label for="inviteCode">2. كود الغرفة</label><input type="text" dir="ltr" id="inviteCode" inputmode="text" maxlength="8" placeholder="مثال: 1-4829" autocomplete="off"></div>
-          <div class="invite-actions"><button type="submit" class="btn primary">انضم إلى الغرفة</button><button type="button" id="copyInviteLink" class="btn">نسخ رابط الدعوة</button></div>
+          <div class="form-divider wide"><span>أو انضم باستخدام رابط</span></div>
+          <div class="field wide"><label for="inviteCode">2. رابط الدعوة</label><input type="url" dir="ltr" id="inviteCode" inputmode="url" placeholder="الصق رابط الدعوة الذي أرسله صديقك" autocomplete="off"></div>
+          <div class="invite-actions"><button type="submit" class="btn primary">انضم إلى الغرفة</button><button type="button" id="copyInviteLink" class="btn">مشاركة الرابط</button></div>
         </form>
       </div>
-      <div class="help-steps"><div><b>01</b><span>اختر اللعبة</span></div><div><b>02</b><span>أنشئ غرفة أو أدخل كوداً</span></div><div><b>03</b><span>شارك الرابط وابدأ الجولة</span></div></div>
+      <div class="help-steps"><div><b>01</b><span>اختر اللعبة</span></div><div><b>02</b><span>أنشئ غرفة أو افتح رابط الدعوة</span></div><div><b>03</b><span>شارك الرابط وابدأ الجولة</span></div></div>
     </section>
     <section id="favoritesSection" data-page="favorites" aria-label="المفضلة" class="hidden"><div class="page-intro"><span class="eyebrow">● YOUR COLLECTION</span><h1>المفضلة</h1><p>ألعابك المفضلة في مكان واحد.</p></div><div class="section-heading"><div><h2>الألعاب المفضلة</h2><p>الألعاب التي حفظتها بنجمة</p></div></div><div id="favoritesGrid" class="games-grid"></div><p class="tiny-note" id="emptyFav">لم تضف ألعاباً للمفضلة بعد. افتح «جميع الألعاب» واضغط النجمة بجانب أي لعبة.</p></section>
     <section id="settingsSection" data-page="settings" aria-label="الإعدادات" class="hidden"><div class="page-intro"><span class="eyebrow">● YOUR PREFERENCES</span><h1>الإعدادات</h1><p>رابط المشاركة، التثبيت، وطريقة حفظ بياناتك.</p></div><div class="settings-panel"><h2>إعدادات المنصة</h2><p>لإرسال روابط اللعب من تطبيق APK، ضع هنا رابط المنصة بعد نشرها على موقع عام. في نسخة المتصفح المنشورة يستخدم الموقع عنوانه تلقائياً.</p><label for="publicUrl">الرابط العام للبوابة</label><input class="settings-input" id="publicUrl" dir="ltr" type="url" placeholder="https://username.github.io/repository/"><button id="saveUrl" class="btn primary">حفظ الرابط</button><div class="notice">الرموز والغرف تعتمد على خوادم MQTT العامة المستخدمة في الألعاب الأصلية؛ لذلك لا يمكن ضمان الاتصال الدائم أو منع ازدواج الرموز من دون خادم مخصص.</div><p>يمكنك تثبيت نسخة الويب من متصفح Chrome إذا كان الموقع منشوراً على HTTPS.</p><button id="installSettings" class="btn hidden">تثبيت على الجهاز</button><p>بيانات المفضلة والإعدادات تحفظ محلياً على جهازك.</p></div></section>
@@ -138,6 +138,14 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
     const isPublic=()=>/^https?:$/.test(location.protocol)&& !/^(localhost|127\.0\.0\.1|appassets\.androidplatform\.net)$/i.test(location.hostname);
     const getBase=()=>{let base=store.get('ph_public_url','').trim()||'https://shafiqjumaa.github.io/shafiq-graphics/playhub/';if(isPublic())base=location.href;try{let u=new URL(base);if(!['https:','http:'].includes(u.protocol))return null;u.search='';u.hash='';return u}catch{return null}};
     const urlFor=(game,room)=>{let u=getBase();if(!u)return null;u.searchParams.set('game',game);u.searchParams.set('room',room);return u.toString()};
+    const parseGameInvite=value=>{
+      try{
+        const raw=String(value||'').trim(),u=new URL(raw),base=getBase();
+        if(!base||u.origin!==base.origin||u.pathname.replace(/\\/+$/,'/')!==base.pathname.replace(/\\/+$/,'/'))return null;
+        const game=safeId(u.searchParams.get('game')),room=validateCode(u.searchParams.get('room'));
+        return game&&room?{game,room}:null;
+      }catch{return null}
+    };
     const toast=msg=>{let e=byId('toast');e.textContent=msg;e.classList.add('show');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>e.classList.remove('show'),3100)};
     const normalizeCode=s=>String(s||'').replace(/[٠-٩]/g,ch=>String(ch.charCodeAt(0)-0x660)).replace(/[۰-۹]/g,ch=>String(ch.charCodeAt(0)-0x6f0)).replace(/[\u200e\u200f\s]/g,'').trim();
     const validateCode=s=>{let c=normalizeCode(s);if(/^\d{4}$/.test(c))return '1-'+c;const m=/^([123])-?(\d{4,6})$/.exec(c);if(m)return m[1]+'-'+m[2];return null};
@@ -194,12 +202,12 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
       byId('activeRoom').classList.add('hidden');byId('gameScreen').classList.add('active');
       byId('roomHint').classList.add('hidden');
       byId('shareRoom').classList.toggle('hidden',!!state.action);
-      if(state.action)roomProgress(state.action==='create'?'جاري إنشاء الغرفة...':'جاري الانضمام للغرفة...',state.action==='create'?'الاتصال بمحرك اللعبة وتثبيت الغرفة على الخادم. لا تضغط إنشاء غرفة ثانية.':'سندخل إلى غرفة صديقك مباشرة باستخدام رمز الدعوة.');
+      if(state.action)roomProgress(state.action==='create'?'جاري إنشاء الغرفة...':'جاري الانضمام للغرفة...',state.action==='create'?'الاتصال بمحرك اللعبة وتثبيت الغرفة على الخادم. لا تضغط إنشاء غرفة ثانية.':'سندخل إلى غرفة صديقك مباشرة باستخدام الرابط.');
       else byId('roomProgress').classList.add('hidden');
       document.body.style.overflow='hidden';
       const src=new URL('games/'+gameFile(id)+'.html',location.href);
       // Cache-bust the Paper Conquest iframe so old installed/PWA copies do not run stale collision rules.
-      if(id==='paper')src.searchParams.set('v','immortal-20261123-2');
+      if(id==='paper')src.searchParams.set('v','invite-link-20261123');
       if(id==='2048'||id==='sudoku')src.searchParams.set('game',id);
       if(room)src.searchParams.set('room',room);
       if(id==='race' && action==='create'){const rc=raceSettings();src.searchParams.set('map',rc.map);src.searchParams.set('mode',rc.mode)}
@@ -228,8 +236,8 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
     document.querySelectorAll('[data-section]').forEach(b=>b.addEventListener('click',()=>section(b.dataset.section)));
     byId('inviteGame').addEventListener('change',()=>{byId('raceOptions').classList.toggle('hidden',byId('inviteGame').value!=='race');byId('paperOptions').classList.toggle('hidden',byId('inviteGame').value!=='paper');byId('conquestOptions').classList.toggle('hidden',byId('inviteGame').value!=='conquest')});
     byId('createRoomHub').addEventListener('click',()=>launch(byId('inviteGame').value,'','create'));
-    byId('inviteForm').addEventListener('submit',e=>{e.preventDefault();const c=validateCode(byId('inviteCode').value);if(!c){toast('أدخل رمزاً صحيحاً مثل 1-4829');return}launch(byId('inviteGame').value,c)});
-    byId('copyInviteLink').addEventListener('click',async()=>{const code=validateCode(byId('inviteCode').value);if(!code){toast('أدخل كود الغرفة أولاً');return}const o=publishShare(byId('inviteGame').value,code);if(!o.url){toast('لنشر رابط عام، انشر الموقع أولاً ثم احفظ رابطه في الإعدادات');return}if(await copy(o.url))toast('تم نسخ رابط الدعوة');else toast('تعذّر نسخ الرابط')});
+    byId('inviteForm').addEventListener('submit',e=>{e.preventDefault();const inv=parseGameInvite(byId('inviteCode').value);if(!inv){toast('الصق رابط دعوة صحيحاً من PlayHub');return}launch(inv.game,inv.room)});
+    byId('copyInviteLink').addEventListener('click',async()=>{const inv=parseGameInvite(byId('inviteCode').value);if(!inv){toast('الصق رابط دعوة صحيحاً أولاً');return}const o=publishShare(inv.game,inv.room);await shareText(o.msg,o.url)});
     byId('retryRoom').addEventListener('click',startRoomRetry);
     byId('cancelRoom').addEventListener('click',()=>byId('exitDialog').classList.remove('hidden'));
     byId('gameFrame').addEventListener('load',()=>{
@@ -263,14 +271,14 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
       if(msg.type==='playhub-room'&&sameGame(msg.game)){
         const code=validateCode(msg.room);if(!code)return;
         state.connectedRoom=code;state.room=code;clearTimeout(state.connectTimeout);
-        byId('activeRoom').textContent=code;byId('activeRoom').classList.remove('hidden');
+        byId('activeRoom').textContent='🔗';byId('activeRoom').title='استخدم زر مشاركة لإرسال رابط الدعوة';byId('activeRoom').classList.add('hidden');
         byId('roomProgress').classList.add('hidden');
         byId('shareRoom').classList.remove('hidden');
         if(state.action){
           byId('roomHint').classList.remove('hidden');
-          byId('roomHint').textContent=state.action==='create'?'تم إنشاء الغرفة. شارك الرابط مع صديقك؛ تبدأ الجولة عند انضمامه.':'تم الاتصال بغرفة صديقك، بانتظار بدء الجولة.';
+          byId('roomHint').textContent=state.action==='create'?'تم إنشاء الغرفة. اضغط «مشاركة» وأرسل الرابط إلى صديقك.':'تم الاتصال بغرفة صديقك، بانتظار بدء الجولة.';
         }
-        byId('inviteCode').value=code;
+        byId('inviteCode').value=urlFor(state.current,code)||'';
       }
     });
     let installEvent=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;byId('installTop').classList.remove('hidden');byId('installSettings').classList.remove('hidden')});const install=async()=>{if(installEvent){installEvent.prompt();await installEvent.userChoice;installEvent=null}else toast('من قائمة المتصفح اختر: إضافة إلى الشاشة الرئيسية')};byId('installTop').addEventListener('click',install);byId('installSettings').addEventListener('click',install);
