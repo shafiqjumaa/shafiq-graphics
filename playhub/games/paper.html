@@ -1,0 +1,3477 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>احتلال المساحات | PlayHub</title>
+
+  <!-- خط Cairo العربي الأنيق -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS للتصميم المتجاوب -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- مكتبة MQTT.js لاتصال EMQX و HiveMQ مع دعم كامل للانتقال التلقائي إلى ntfy.sh في حال عدم توفرها -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js" async></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(15, 23, 42, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.14);
+      --accent: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+      background-color: #e2e8f0;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+
+    /* القماش الرئيسي للعبة */
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    /* خلفية اللوبي الزجاجية المتحركة */
+    .lobby-backdrop {
+      background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.22), transparent 45%),
+                  radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.2), transparent 45%),
+                  rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    /* أزرار الأركيد ثلاثية الأبعاد */
+    .btn-arcade {
+      position: relative;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.25);
+    }
+    .btn-arcade:hover {
+      filter: brightness(1.06);
+    }
+    .btn-arcade:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 5px 0 #047857, 0 10px 20px rgba(16, 185, 129, 0.32);
+    }
+    .btn-emerald:active {
+      box-shadow: 0 2px 0 #047857;
+    }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 5px 0 #1d4ed8, 0 10px 20px rgba(59, 130, 246, 0.32);
+    }
+    .btn-blue:active {
+      box-shadow: 0 2px 0 #1d4ed8;
+    }
+
+    .btn-purple {
+      background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+      box-shadow: 0 5px 0 #5b21b6, 0 10px 20px rgba(168, 85, 247, 0.32);
+    }
+    .btn-purple:active {
+      box-shadow: 0 2px 0 #5b21b6;
+    }
+
+    .btn-rose {
+      background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%);
+      box-shadow: 0 5px 0 #9f1239, 0 10px 20px rgba(244, 63, 94, 0.32);
+    }
+    .btn-rose:active {
+      box-shadow: 0 2px 0 #9f1239;
+    }
+
+    /* دوائر اختيار اللون */
+    .color-swatch {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .color-swatch.selected {
+      transform: scale(1.18);
+      box-shadow: 0 0 0 3px #ffffff, 0 0 16px rgba(255, 255, 255, 0.6);
+    }
+
+    /* التبويبات */
+    .mode-tab {
+      transition: all 0.18s ease;
+    }
+    .mode-tab.active {
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+    }
+
+    /* أزرار التحكم باللمس على الشاشة (D-Pad) */
+    .dpad-btn {
+      background: rgba(15, 23, 42, 0.65);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      transition: transform 0.08s ease, background-color 0.08s ease;
+      touch-action: none;
+    }
+    .dpad-btn:active, .dpad-btn.pressed {
+      background: rgba(56, 189, 248, 0.85);
+      transform: scale(0.92);
+    }
+
+    /* حاوية الـ HUD */
+    .hud-pill {
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    /* حركات إشعارات القتل والتوست */
+    @keyframes slideDownFade {
+      0% { opacity: 0; transform: translateY(-14px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-pop {
+      animation: slideDownFade 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.7; }
+    }
+    .pulse-dot {
+      animation: pulseDot 1.5s infinite ease-in-out;
+    }
+
+    /* تخصيص شريط التمرير الداخلي داخل بطاقة اللوبي على الشاشات الصغيرة جداً */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 99px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 99px;
+    }
+
+    /* السماح بالكتابة داخل حقول الإدخال */
+    input {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+  </style>
+</head>
+<body class="text-white">
+
+  <!-- قماش اللعبة الرئيسي بملء الشاشة -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ===================== شاشة القائمة الرئيسية (اللوبي) ===================== -->
+  <div id="lobbyScreen" class="fixed inset-0 z-30 lobby-backdrop flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+    <div class="glass-card w-full max-w-xl rounded-3xl p-4 sm:p-6 max-h-[96dvh] overflow-y-auto custom-scroll relative">
+
+      <!-- الشريط العلوي للشعار والصوت -->
+      <div class="flex items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-3">
+          <!-- أيقونة الشعار SVG ثلاثية الأبعاد -->
+          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/30 shrink-0">
+            <svg class="w-7 h-7 text-white" viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="4" width="12" height="12" rx="3" fill="currentColor" opacity="0.95"/>
+              <rect x="16" y="4" width="12" height="12" rx="3" fill="#fde047" opacity="0.9"/>
+              <rect x="4" y="16" width="12" height="12" rx="3" fill="#34d399" opacity="0.9"/>
+              <rect x="17" y="17" width="10" height="10" rx="2.5" stroke="white" stroke-width="2.5" stroke-dasharray="3 2"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-l from-white via-sky-200 to-emerald-200 bg-clip-text text-transparent">
+              احتلال المساحات
+            </h1>
+            <p class="text-[11px] sm:text-xs text-slate-300 font-medium">سيطر على 95%، والساحة لا تقصي أحداً نهائياً!</p>
+          </div>
+        </div>
+
+        <!-- زر كتم/تشغيل الصوت -->
+        <button id="lobbySoundBtn" type="button" title="الصوت" class="w-10 h-10 rounded-2xl bg-slate-800/90 hover:bg-slate-700 border border-white/15 flex items-center justify-center text-lg transition">
+          🔊
+        </button>
+      </div>
+
+      <!-- إعدادات اللاعب (الاسم + اللون) -->
+      <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-3 sm:p-3.5 mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <label for="playerNameInput" class="block text-xs text-slate-300 font-bold mb-1">اسمك في الساحة</label>
+            <select id="funnyNameSelect" aria-label="اختر اسماً كوميدياً" class="w-full px-3 py-2 rounded-xl bg-slate-900/90 border border-white/15 text-white font-bold text-xs mb-2"></select>
+            <input id="playerNameInput" type="text" maxlength="20" placeholder="أو اكتب اسمك الخاص..." value="البطل"
+              class="w-full px-3.5 py-2 rounded-xl bg-slate-900/90 border border-white/15 text-white font-bold text-sm focus:outline-none focus:border-sky-400 transition" />
+          </div>
+          <div>
+            <span class="block text-xs text-slate-300 font-bold mb-1.5">اختر لونك</span>
+            <div id="colorPicker" class="flex items-center gap-2 flex-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-3 mb-4">
+        <div class="flex items-center justify-between mb-2"><span class="text-xs font-extrabold text-white">اختر شخصيتك</span><span id="characterSelectedLabel" class="text-xs text-sky-300">نينجا</span></div>
+        <div id="characterPicker" class="grid grid-cols-4 sm:grid-cols-8 gap-2" role="group" aria-label="اختيار الشخصية"></div>
+      </div>
+      <div class="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-2 mb-4 text-center text-xs font-bold text-emerald-200">🏁 الهدف: السيطرة على 95% من الخريطة • العودة بعد 10 ثوانٍ • الحواف آمنة</div>
+
+      <!-- تبويبات أوضاع اللعب الثلاثة -->
+      <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 mb-4">
+        <button type="button" data-mode="solo" class="mode-tab active py-2 px-2 rounded-xl text-xs sm:text-sm font-extrabold text-slate-300 flex items-center justify-center gap-1.5">
+          <span>🤖</span><span>فردي</span>
+        </button>
+        <button type="button" data-mode="online" class="mode-tab py-2 px-2 rounded-xl text-xs sm:text-sm font-extrabold text-slate-300 flex items-center justify-center gap-1.5">
+          <span>🌐</span><span>أونلاين</span>
+        </button>
+        <button type="button" data-mode="local" class="mode-tab py-2 px-2 rounded-xl text-xs sm:text-sm font-extrabold text-slate-300 flex items-center justify-center gap-1.5">
+          <span>👥</span><span>محلي (2)</span>
+        </button>
+      </div>
+
+      <!-- ========== 1. لوحة اللعب الفردي ========== -->
+      <div id="panelSolo" class="space-y-3.5">
+        <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-3.5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs sm:text-sm font-bold text-slate-200">مستوى ذكاء البوتات (6 منافسين)</span>
+            <span class="text-[11px] text-sky-300 font-bold">ساحة 64×64</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2" id="difficultyGroup">
+            <button type="button" data-diff="easy" class="diff-btn py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900/80 border border-white/10 text-slate-300 hover:border-emerald-400/50 transition">
+              🌱 سهل
+            </button>
+            <button type="button" data-diff="medium" class="diff-btn py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/25 border-2 border-sky-400 text-white transition">
+              ⚡ متوسط
+            </button>
+            <button type="button" data-diff="hard" class="diff-btn py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900/80 border border-white/10 text-slate-300 hover:border-rose-400/50 transition">
+              🔥 صعب
+            </button>
+          </div>
+        </div>
+
+        <button id="startSoloBtn" type="button" class="btn-arcade btn-emerald w-full py-3.5 rounded-2xl text-base sm:text-lg font-black text-white flex items-center justify-center gap-2">
+          <span>🚀</span><span>ابدأ المعركة الآن</span>
+        </button>
+
+        <div class="text-center text-[11px] sm:text-xs text-slate-400 pt-1">
+          الكمبيوتر: الأسهم أو WASD &nbsp;•&nbsp; الجوال: اسحب بأصبعك أو فعّل أزرار التحكم
+        </div>
+      </div>
+
+      <!-- ========== 2. لوحة اللعب أونلاين مع صديق ========== -->
+      <div id="panelOnline" class="hidden space-y-3">
+        <!-- شريط السيرفرات وحالة الاتصال -->
+        <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-bold text-slate-300">سيرفر الاتصال (3 خوادم احتياطية):</span>
+            <div id="lobbyNetStatus" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-white/10 text-[11px] font-bold text-slate-300">
+              <span id="lobbyNetDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span id="lobbyNetText">غير متصل</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5" id="serverSelector">
+            <button type="button" data-srv="auto" class="srv-btn py-1.5 px-1 rounded-xl text-[11px] font-extrabold bg-sky-500/25 border border-sky-400 text-sky-200 transition">تلقائي</button>
+            <button type="button" data-srv="emqx" class="srv-btn py-1.5 px-1 rounded-xl text-[11px] font-bold bg-slate-900/70 border border-white/10 text-slate-300 transition">EMQX</button>
+            <button type="button" data-srv="hivemq" class="srv-btn py-1.5 px-1 rounded-xl text-[11px] font-bold bg-slate-900/70 border border-white/10 text-slate-300 transition">HiveMQ</button>
+            <button type="button" data-srv="ntfy" class="srv-btn py-1.5 px-1 rounded-xl text-[11px] font-bold bg-slate-900/70 border border-white/10 text-slate-300 transition">ntfy.sh</button>
+          </div>
+        </div>
+
+        <!-- واجهة إنشاء أو الانضمام لغرفة -->
+        <div id="onlineSetupView" class="space-y-3">
+          <!-- خيارات الغرفة عند الإنشاء -->
+          <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-3 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">🤖 إضافة بوتات للساحة</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="onlineBotsToggle" type="checkbox" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:right-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:-translate-x-5"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">🏁 الوصول إلى 95% يحسم السباق</span>
+              <div class="flex gap-1.5" id="onlineTimerGroup">
+                <button type="button" data-sec="0" class="otimer-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900/80 border border-white/10 text-slate-300">مفتوح</button>
+                <button type="button" data-sec="120" class="otimer-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-500/25 border border-sky-400 text-white">دقيقتان</button>
+                <button type="button" data-sec="180" class="otimer-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900/80 border border-white/10 text-slate-300">3 دقائق</button>
+              </div>
+            </div>
+          </div>
+
+          <button id="createRoomBtn" type="button" class="btn-arcade btn-blue w-full py-3 rounded-2xl text-sm sm:text-base font-black text-white flex items-center justify-center gap-2">
+            <span>🏠</span><span>إنشاء غرفة خاصة ودعوة صديق</span>
+          </button>
+
+          <div class="flex items-center gap-2">
+            <div class="h-px flex-1 bg-white/10"></div>
+            <span class="text-xs text-slate-400 font-bold">أو انضم برمز الغرفة</span>
+            <div class="h-px flex-1 bg-white/10"></div>
+          </div>
+
+          <div class="flex gap-2">
+            <input id="joinCodeInput" type="text" inputmode="numeric" maxlength="5" placeholder="أدخل الرمز (5 أرقام)"
+              class="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-900/90 border border-white/15 text-center tracking-[0.25em] font-black text-base text-sky-300 placeholder:tracking-normal placeholder:font-medium placeholder:text-sm focus:outline-none focus:border-sky-400" />
+            <button id="joinRoomBtn" type="button" class="btn-arcade btn-purple px-5 py-2.5 rounded-2xl text-sm font-black text-white shrink-0">
+              انضمام
+            </button>
+          </div>
+        </div>
+
+        <!-- واجهة غرفة الانتظار بعد الإنشاء أو الانضمام -->
+        <div id="onlineRoomView" class="hidden space-y-3">
+          <div class="bg-gradient-to-l from-sky-900/50 to-indigo-900/50 border border-sky-400/30 rounded-2xl p-3.5 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[11px] text-sky-200 font-bold">رمز الغرفة الخاصة</div>
+              <div id="roomCodeDisplay" class="text-2xl sm:text-3xl font-black tracking-[0.22em] text-white font-mono">00000</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="copyRoomCodeBtn" type="button" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow">
+                <span>📋</span><span>نسخ الرمز</span>
+              </button>
+              <button id="leaveRoomBtn" type="button" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/40 text-rose-200 text-xs font-extrabold transition">
+                خروج
+              </button>
+            </div>
+          </div>
+
+          <!-- قائمة اللاعبين المتصلين بالغرفة -->
+          <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-300">اللاعبون في الغرفة</span>
+              <span id="roomMetaBadge" class="text-[11px] text-emerald-300 font-bold"></span>
+            </div>
+            <div id="roomPlayersList" class="space-y-1.5 max-h-36 overflow-y-auto custom-scroll"></div>
+          </div>
+
+          <!-- زر البدء للمضيف أو رسالة انتظار للضيف -->
+          <button id="hostStartOnlineBtn" type="button" class="btn-arcade btn-emerald w-full py-3.5 rounded-2xl text-base font-black text-white hidden items-center justify-center gap-2">
+            <span>🎮</span><span>ابدأ اللعب الآن</span>
+          </button>
+          <div id="guestWaitingMsg" class="hidden text-center py-3 px-4 rounded-2xl bg-slate-800/70 border border-white/10 text-xs sm:text-sm text-sky-200 font-bold">
+            ⏳ متصل بالغرفة! بانتظار المضيف لبدء الجولة...
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 3. لوحة اللعب المحلي (لاعبان على نفس الجهاز) ========== -->
+      <div id="panelLocal" class="hidden space-y-3.5">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="bg-slate-800/60 border border-sky-400/30 rounded-2xl p-3 text-center">
+            <div class="text-xs font-black text-sky-300 mb-1">اللاعب 1</div>
+            <input id="localP1Name" type="text" maxlength="10" value="اللاعب 1" class="w-full text-center py-1 px-2 rounded-lg bg-slate-900/90 border border-white/10 text-xs font-bold text-white mb-2">
+            <div class="inline-flex items-center gap-1 text-[11px] bg-slate-900/80 px-2.5 py-1 rounded-lg text-slate-200 font-mono font-bold">
+              W A S D
+            </div>
+          </div>
+          <div class="bg-slate-800/60 border border-rose-400/30 rounded-2xl p-3 text-center">
+            <div class="text-xs font-black text-rose-300 mb-1">اللاعب 2</div>
+            <input id="localP2Name" type="text" maxlength="10" value="اللاعب 2" class="w-full text-center py-1 px-2 rounded-lg bg-slate-900/90 border border-white/10 text-xs font-bold text-white mb-2">
+            <div class="inline-flex items-center gap-1 text-[11px] bg-slate-900/80 px-2.5 py-1 rounded-lg text-slate-200 font-bold">
+              ⬅️ ⬆️ ⬇️ ➡️
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/50 border border-white/10 rounded-2xl p-3 flex items-center justify-between">
+          <div>
+            <div class="text-xs sm:text-sm font-bold text-slate-200">🤖 إضافة 3 بوتات للساحة</div>
+            <div class="text-[11px] text-slate-400">ساحة تكتيكية 44×44 كاملة على الشاشة</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="localBotsToggle" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:right-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:-translate-x-5"></div>
+          </label>
+        </div>
+
+        <button id="startLocalBtn" type="button" class="btn-arcade btn-rose w-full py-3.5 rounded-2xl text-base font-black text-white flex items-center justify-center gap-2">
+          <span>⚔️</span><span>ابدأ التحدي الثنائي</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== واجهة اللعب (HUD) ===================== -->
+  <div id="hudOverlay" class="fixed inset-0 z-20 pointer-events-none hidden">
+
+    <!-- أعلى اليسار (في RTL يكون يسار الشاشة): الإحصائيات وأزرار التحكم السريعة -->
+    <div class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 flex flex-col items-start gap-2 pointer-events-auto">
+      <div class="hud-pill rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2.5 sm:gap-3.5 text-xs sm:text-sm font-extrabold">
+        <div class="flex items-center gap-1 text-emerald-300" title="نسبة مساحتك">
+          <span>🗺️</span>
+          <span id="hudPercent">0.0%</span>
+        </div>
+        <div class="w-px h-4 bg-white/15"></div>
+        <div class="flex items-center gap-1 text-amber-300" title="الإقصاءات">
+          <span>⚔️</span>
+          <span id="hudKills">0</span>
+        </div>
+        <div id="hudTimerWrap" class="hidden items-center gap-1 text-sky-300 border-r border-white/15 pr-2.5">
+          <span>⏱️</span>
+          <span id="hudTimer" class="font-mono">02:00</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button id="hudExitBtn" type="button" title="العودة للقائمة" class="hud-pill w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-sm hover:bg-rose-500/40 transition">
+          🚪
+        </button>
+        <button id="hudSoundBtn" type="button" title="الصوت" class="hud-pill w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-sm hover:bg-slate-700/80 transition">
+          🔊
+        </button>
+        <button id="hudDpadToggle" type="button" title="أزرار التحكم على الشاشة" class="hud-pill px-2.5 h-9 sm:h-10 rounded-xl flex items-center justify-center gap-1 text-xs font-bold hover:bg-sky-500/40 transition">
+          <span>🎮</span><span class="hidden sm:inline">أزرار</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- أعلى الوسط: حالة السيرفر أونلاين + إشعارات الإقصاء + شريط المشاهدة -->
+    <div class="absolute top-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 w-[200px] sm:w-auto max-w-[60vw]">
+      <div id="hudOnlinePill" class="hidden hud-pill rounded-full px-3 py-1 text-[11px] font-bold items-center gap-1.5 text-slate-200">
+        <span id="hudOnlineDot" class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+        <span id="hudOnlineText">EMQX • 42ms</span>
+      </div>
+      <div id="spectatorBanner" class="hidden hud-pill rounded-full px-3.5 py-1 text-xs font-extrabold text-amber-300 border-amber-400/40">
+        ⏳ العودة إلى الساحة بعد 10 ثوانٍ
+      </div>
+      <div id="killFeed" class="flex flex-col items-center gap-1"></div>
+    </div>
+
+    <!-- أعلى اليمين: قائمة المتصدرين -->
+    <div class="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 hud-pill rounded-2xl p-2.5 sm:p-3 w-[138px] sm:w-[192px]">
+      <div class="text-[11px] sm:text-xs font-black text-sky-300 mb-1.5 flex items-center justify-between">
+        <span>🏆 المتصدرون</span>
+        <span id="hudAliveCount" class="text-[10px] text-slate-400 font-bold"></span>
+      </div>
+      <div id="leaderboardList" class="space-y-1 text-[11px] sm:text-xs font-bold"></div>
+    </div>
+
+    <!-- أسفل اليسار: أزرار التحكم باللمس القابلة للتفعيل/الإخفاء (D-Pad) -->
+    <div id="dpadOverlay" class="hidden absolute bottom-4 left-4 sm:bottom-6 sm:left-6 pointer-events-auto">
+      <div class="grid grid-cols-3 grid-rows-3 gap-1.5 w-[150px] h-[150px] sm:w-[168px] sm:h-[168px]">
+        <div></div>
+        <button type="button" data-dir="0" class="dpad-btn rounded-2xl flex items-center justify-center text-xl font-black">▲</button>
+        <div></div>
+        <button type="button" data-dir="3" class="dpad-btn rounded-2xl flex items-center justify-center text-xl font-black">◀</button>
+        <div class="rounded-full bg-white/10 border border-white/15 m-2"></div>
+        <button type="button" data-dir="1" class="dpad-btn rounded-2xl flex items-center justify-center text-xl font-black">▶</button>
+        <div></div>
+        <button type="button" data-dir="2" class="dpad-btn rounded-2xl flex items-center justify-center text-xl font-black">▼</button>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- أسفل الوسط: شريط الإيموجي التفاعلي السريع (أونلاين) -->
+    <div id="emojiBar" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-auto hud-pill rounded-full px-2 py-1.5 flex items-center gap-1.5">
+      <button type="button" data-emoji="🔥" class="emoji-btn w-9 h-9 rounded-full hover:bg-white/15 active:scale-90 transition text-lg flex items-center justify-center">🔥</button>
+      <button type="button" data-emoji="😂" class="emoji-btn w-9 h-9 rounded-full hover:bg-white/15 active:scale-90 transition text-lg flex items-center justify-center">😂</button>
+      <button type="button" data-emoji="😱" class="emoji-btn w-9 h-9 rounded-full hover:bg-white/15 active:scale-90 transition text-lg flex items-center justify-center">😱</button>
+      <button type="button" data-emoji="👑" class="emoji-btn w-9 h-9 rounded-full hover:bg-white/15 active:scale-90 transition text-lg flex items-center justify-center">👑</button>
+    </div>
+
+    <!-- أسفل اليمين: الخريطة المصغرة (Minimap) -->
+    <div class="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 hud-pill rounded-2xl p-1.5 shadow-xl">
+      <canvas id="minimapCanvas" class="rounded-xl block w-[84px] h-[84px] sm:w-[122px] sm:h-[122px]"></canvas>
+    </div>
+  </div>
+
+  <!-- ===================== نافذة نهاية الجولة ===================== -->
+  <div id="gameOverModal" class="fixed inset-0 z-40 lobby-backdrop hidden items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md rounded-3xl p-5 sm:p-6 text-center animate-pop">
+      <div id="goIcon" class="text-5xl mb-2">🏆</div>
+      <h2 id="goTitle" class="text-2xl sm:text-3xl font-black text-white mb-1">انتهت الجولة!</h2>
+      <p id="goSubtitle" class="text-xs sm:text-sm text-slate-300 font-bold mb-4"></p>
+
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <div class="bg-slate-800/80 border border-white/10 rounded-2xl p-2.5">
+          <div class="text-[11px] text-slate-400 font-bold">المركز</div>
+          <div id="goRank" class="text-xl font-black text-amber-300">#1</div>
+        </div>
+        <div class="bg-slate-800/80 border border-white/10 rounded-2xl p-2.5">
+          <div class="text-[11px] text-slate-400 font-bold">أعلى مساحة</div>
+          <div id="goMaxPct" class="text-xl font-black text-emerald-300">0%</div>
+        </div>
+        <div class="bg-slate-800/80 border border-white/10 rounded-2xl p-2.5">
+          <div class="text-[11px] text-slate-400 font-bold">الإقصاءات</div>
+          <div id="goKills" class="text-xl font-black text-sky-300">0</div>
+        </div>
+      </div>
+
+      <!-- ملخص ترتيب المتصدرين -->
+      <div id="goRankingList" class="bg-slate-900/70 border border-white/10 rounded-2xl p-3 mb-5 space-y-1.5 text-xs sm:text-sm text-right max-h-40 overflow-y-auto custom-scroll"></div>
+
+      <div class="flex flex-col sm:flex-row gap-2.5">
+        <button id="playAgainBtn" type="button" class="btn-arcade btn-emerald flex-1 py-3 rounded-2xl text-sm sm:text-base font-black text-white">
+          🔄 جولة جديدة
+        </button>
+        <div id="guestRematchWait" class="hidden flex-1 py-3 px-3 rounded-2xl bg-slate-800/80 border border-white/10 text-xs font-bold text-sky-200 flex items-center justify-center">
+          ⏳ بانتظار المضيف لبدء جولة جديدة...
+        </div>
+        <button id="backToLobbyBtn" type="button" class="btn-arcade bg-slate-700 hover:bg-slate-600 py-3 px-5 rounded-2xl text-sm sm:text-base font-extrabold text-white">
+          🏠 القائمة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- حاوية الإشعارات العائمة (بديل alert) -->
+  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none w-[90vw] max-w-sm"></div>
+
+  <!-- ===================== الكود البرمجي الكامل للعبة ===================== -->
+  <script>
+  (() => {
+    'use strict';
+
+    /* =========================================================================
+       1. الثوابت ولوحة الألوان الزاهية وأسماء البوتات العربية
+       ========================================================================= */
+    const PALETTE = [
+      { name: 'أحمر ياقوتي', main: '#ef4444', dark: '#b91c1c', territory: '#f87171', border: '#dc2626', trail: 'rgba(239, 68, 68, 0.48)' },
+      { name: 'أزرق محيطي', main: '#3b82f6', dark: '#1d4ed8', territory: '#60a5fa', border: '#2563eb', trail: 'rgba(59, 130, 246, 0.48)' },
+      { name: 'أخضر زمردي', main: '#10b981', dark: '#047857', territory: '#34d399', border: '#059669', trail: 'rgba(16, 185, 129, 0.48)' },
+      { name: 'بنفسجي ملكي', main: '#a855f7', dark: '#7e22ce', territory: '#c084fc', border: '#9333ea', trail: 'rgba(168, 85, 247, 0.48)' },
+      { name: 'برتقالي ناري', main: '#f97316', dark: '#c2410c', territory: '#fb923c', border: '#ea580c', trail: 'rgba(249, 115, 22, 0.48)' },
+      { name: 'وردي فاقع', main: '#ec4899', dark: '#be185d', territory: '#f472b6', border: '#db2777', trail: 'rgba(236, 72, 153, 0.48)' },
+      { name: 'سماوي فيروزي', main: '#06b6d4', dark: '#0e7490', territory: '#22d3ee', border: '#0891b2', trail: 'rgba(6, 182, 212, 0.48)' },
+      { name: 'ذهبي مشرق', main: '#eab308', dark: '#a16207', territory: '#facc15', border: '#ca8a04', trail: 'rgba(234, 179, 8, 0.50)' }
+    ];
+
+    const COMEDY_NAMES = [
+      'أبو شحاطة','ملك البطاطا','أبو كرش','صاحب الصحن','البطريق الحيران',
+      'زعيم الملوخية','فلافل طائرة','عبود المصيبة','تنين الحارة','الدب الداشر',
+      'الشيخ كتشب','مستر كوسا','أبو النعنع','حارس المخلل','بطاطس باشا',
+      'زعتر مان','أمير البطيخ','حجي شوكولا','كابتن كبة','العم طقطوق'
+    ];
+    const CHARACTERS = [
+      {label:'نينجا',emoji:'🥷'}, {label:'روبوت',emoji:'🤖'},
+      {label:'قرصان',emoji:'🏴‍☠️'}, {label:'فضائي',emoji:'👽'},
+      {label:'دب',emoji:'🐻'}, {label:'قط',emoji:'😺'},
+      {label:'مهرج',emoji:'🤡'}, {label:'تنين',emoji:'🐲'}
+    ];
+    const RESPAWN_SECONDS=10, VICTORY_PERCENT=95;
+
+    const BOT_NAMES = [
+      'صقر', 'البرق', 'أسد الصحراء', 'نمر', 'عاصفة', 'فارس',
+      'ذئب الليل', 'نسر', 'شهاب', 'كاسر', 'بركان', 'شبح'
+    ];
+
+    // الاتجاهات الأربعة: 0 أعلى، 1 يمين، 2 أسفل، 3 يسار
+    const DIRS = [
+      { dx: 0, dy: -1 },
+      { dx: 1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: -1, dy: 0 }
+    ];
+
+    const isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+    /* =========================================================================
+       2. نظام الإشعارات العائمة (Toast) ونسخ النصوص الآمن
+       ========================================================================= */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const colors = {
+        info: 'bg-slate-900/95 border-sky-400/50 text-sky-100',
+        success: 'bg-emerald-950/95 border-emerald-400/60 text-emerald-100',
+        warn: 'bg-amber-950/95 border-amber-400/60 text-amber-100',
+        error: 'bg-rose-950/95 border-rose-400/60 text-rose-100'
+      };
+      el.className = `animate-pop px-4 py-2.5 rounded-2xl border shadow-2xl text-xs sm:text-sm font-extrabold text-center ${colors[type] || colors.info}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-10px)';
+        setTimeout(() => el.remove(), 260);
+      }, 2800);
+    }
+
+    function copyTextSafe(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    /* =========================================================================
+       3. محرك الصوت الاصطناعي (Web Audio API - بدون ملفات خارجية)
+       ========================================================================= */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      unlock() {
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        } catch (e) { /* تجاهل إذا لم يدعم المتصفح الصوت */ }
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        const icon = this.muted ? '🔇' : '🔊';
+        document.getElementById('lobbySoundBtn').textContent = icon;
+        document.getElementById('hudSoundBtn').textContent = icon;
+        if (!this.muted) this.playClick();
+      }
+
+      playClick() {
+        if (this.muted) return;
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(740, now + 0.05);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+      }
+
+      playTurn() {
+        if (this.muted) return;
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(170, now + 0.055);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+      }
+
+      playCapture(cellsCaptured) {
+        if (this.muted) return;
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        // نغمة صاعدة تتناسب مع حجم المساحة المحتلة
+        const intensity = Math.min(1, cellsCaptured / 80);
+        const notes = intensity > 0.45 ? [523.25, 659.25, 783.99, 1046.5] : [440, 587.33, 739.99];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          const t = now + idx * 0.045;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(0.11 + intensity * 0.05, t + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.24);
+        });
+      }
+
+      playElimination(isMe) {
+        if (this.muted) return;
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = isMe ? 'sawtooth' : 'square';
+        osc.frequency.setValueAtTime(isMe ? 240 : 420, now);
+        osc.frequency.exponentialRampToValueAtTime(isMe ? 55 : 110, now + 0.28);
+        gain.gain.setValueAtTime(0.13, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.32);
+      }
+
+      playVictory() {
+        if (this.muted) return;
+        this.unlock();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const melody = [523.25, 659.25, 783.99, 1046.5, 987.77, 1046.5];
+        const times = [0, 0.1, 0.2, 0.32, 0.48, 0.6];
+        melody.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          const t = now + times[i];
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.13, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        });
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* =========================================================================
+       4. معمارية الاتصال أونلاين بـ 3 سيرفرات مستقلة (EMQX -> HiveMQ -> ntfy.sh)
+       ========================================================================= */
+    class OnlineTransport {
+      constructor() {
+        this.clientId = 'u_' + Math.random().toString(36).slice(2, 9);
+        this.preferredServer = 'auto'; // auto | emqx | hivemq | ntfy
+        this.activeServer = null;      // emqx | hivemq | ntfy
+        this.roomCode = null;
+        this.topic = null;
+        this.mqttClient = null;
+        this.eventSource = null;
+        this.connected = false;
+        this.latencyMs = null;
+        this.onMessage = null;
+        this.onStatusChange = null;
+        this._pingTimer = null;
+        this._connectAttemptId = 0;
+      }
+
+      setPreferredServer(srv) {
+        this.preferredServer = srv;
+      }
+
+      updateStatus(state, label) {
+        if (this.onStatusChange) {
+          this.onStatusChange(state, label, this.activeServer, this.latencyMs);
+        }
+      }
+
+      disconnect() {
+        this._connectAttemptId++;
+        this.connected = false;
+        this.activeServer = null;
+        this.latencyMs = null;
+        if (this._pingTimer) {
+          clearInterval(this._pingTimer);
+          this._pingTimer = null;
+        }
+        if (this.mqttClient) {
+          try { this.mqttClient.end(true); } catch (e) {}
+          this.mqttClient = null;
+        }
+        if (this.eventSource) {
+          try { this.eventSource.close(); } catch (e) {}
+          this.eventSource = null;
+        }
+        this.updateStatus('idle', 'غير متصل');
+      }
+
+      async connect(roomCode) {
+        this.disconnect();
+        const attemptId = ++this._connectAttemptId;
+        this.roomCode = roomCode;
+        this.topic = `paperio_ar_v3_${roomCode}`;
+
+        const order = this.preferredServer === 'auto'
+          ? ['emqx', 'hivemq', 'ntfy']
+          : [this.preferredServer];
+
+        for (const srv of order) {
+          if (attemptId !== this._connectAttemptId) return false;
+          this.updateStatus('connecting', `جاري الاتصال بـ ${srv.toUpperCase()}...`);
+          const ok = await this._tryServer(srv, attemptId);
+          if (ok && attemptId === this._connectAttemptId) {
+            this.activeServer = srv;
+            this.connected = true;
+            this.updateStatus('connected', `${srv.toUpperCase()} متصل`);
+            this._startLatencyPing();
+            return true;
+          }
+        }
+
+        if (attemptId === this._connectAttemptId) {
+          this.updateStatus('error', 'تعذر الاتصال بالسيرفر');
+        }
+        return false;
+      }
+
+      _tryServer(srv, attemptId) {
+        if (srv === 'ntfy') {
+          return this._connectNtfy(attemptId);
+        }
+        return this._connectMqtt(srv, attemptId);
+      }
+
+      _connectMqtt(srv, attemptId) {
+        return new Promise((resolve) => {
+          if (typeof window.mqtt === 'undefined') {
+            resolve(false);
+            return;
+          }
+          const url = srv === 'emqx'
+            ? 'wss://broker.emqx.io:8084/mqtt'
+            : 'wss://broker.hivemq.com:8884/mqtt';
+
+          let settled = false;
+          const finish = (val) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            if (!val && client) {
+              try { client.end(true); } catch (e) {}
+            }
+            resolve(val);
+          };
+
+          const timeout = setTimeout(() => finish(false), 4500);
+          let client = null;
+          try {
+            client = window.mqtt.connect(url, {
+              clientId: 'pio_' + this.clientId + '_' + Math.floor(Math.random() * 999),
+              clean: true,
+              connectTimeout: 4000,
+              reconnectPeriod: 0
+            });
+          } catch (e) {
+            finish(false);
+            return;
+          }
+
+          client.on('connect', () => {
+            if (attemptId !== this._connectAttemptId) {
+              finish(false);
+              return;
+            }
+            client.subscribe(this.topic, { qos: 0 }, (err) => {
+              if (err) {
+                finish(false);
+              } else {
+                this.mqttClient = client;
+                finish(true);
+              }
+            });
+          });
+
+          client.on('message', (_topic, payload) => {
+            if (attemptId !== this._connectAttemptId) return;
+            try {
+              const msg = JSON.parse(payload.toString());
+              this._handleIncoming(msg);
+            } catch (e) {}
+          });
+
+          client.on('error', () => finish(false));
+          client.on('close', () => {
+            if (!settled) finish(false);
+            else if (attemptId === this._connectAttemptId && this.connected) {
+              this.connected = false;
+              this.updateStatus('error', 'انقطع الاتصال');
+            }
+          });
+        });
+      }
+
+      _connectNtfy(attemptId) {
+        return new Promise((resolve) => {
+          let settled = false;
+          const finish = (val) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            if (!val && es) {
+              try { es.close(); } catch (e) {}
+            }
+            resolve(val);
+          };
+
+          const timeout = setTimeout(() => finish(false), 5500);
+          let es = null;
+          try {
+            es = new EventSource(`https://ntfy.sh/${this.topic}/sse`);
+          } catch (e) {
+            finish(false);
+            return;
+          }
+
+          es.addEventListener('open', () => {
+            if (attemptId !== this._connectAttemptId) {
+              finish(false);
+              return;
+            }
+            this.eventSource = es;
+            finish(true);
+          });
+
+          es.addEventListener('message', (ev) => {
+            if (attemptId !== this._connectAttemptId) return;
+            try {
+              const outer = JSON.parse(ev.data);
+              if (outer && outer.event === 'message' && outer.message) {
+                const msg = JSON.parse(outer.message);
+                this._handleIncoming(msg);
+              }
+            } catch (e) {}
+          });
+
+          es.onerror = () => {
+            if (!settled) finish(false);
+          };
+        });
+      }
+
+      _handleIncoming(msg) {
+        if (!msg || typeof msg !== 'object') return;
+        // قياس زمن الاستجابة (Ping عبر الصدى الذاتي)
+        if (msg.t === '_ping' && msg.sid === this.clientId && msg.ts) {
+          this.latencyMs = Math.max(8, Math.round(performance.now() - msg.ts));
+          this.updateStatus('connected', `${this.activeServer.toUpperCase()} • ${this.latencyMs}ms`);
+          return;
+        }
+        if (msg.sid === this.clientId) return; // تجاهل رسائلنا الخاصة
+        if (this.onMessage) this.onMessage(msg);
+      }
+
+      _startLatencyPing() {
+        const sendPing = () => {
+          if (!this.connected) return;
+          this.send({ t: '_ping', ts: performance.now() }, true);
+        };
+        setTimeout(sendPing, 400);
+        this._pingTimer = setInterval(sendPing, 6000);
+      }
+
+      send(payload, allowSelf = false) {
+        if (!this.connected) return;
+        const packet = Object.assign({}, payload, { sid: this.clientId });
+        const raw = JSON.stringify(packet);
+        try {
+          if (this.activeServer === 'ntfy') {
+            fetch(`https://ntfy.sh/${this.topic}`, {
+              method: 'POST',
+              body: raw
+            }).catch(() => {});
+          } else if (this.mqttClient && this.mqttClient.connected) {
+            this.mqttClient.publish(this.topic, raw, { qos: 0 });
+          }
+        } catch (e) {}
+      }
+    }
+
+    /* =========================================================================
+       5. ضغط وفك ضغط الشبكة بترميز RLE (لتحديث المساحات أونلاين بحجم ضئيل جداً)
+       ========================================================================= */
+    function encodeGridRLE(grid) {
+      let out = '';
+      let prev = grid[0];
+      let count = 1;
+      for (let i = 1; i < grid.length; i++) {
+        const v = grid[i];
+        if (v === prev) {
+          count++;
+        } else {
+          out += `${prev.toString(36)}:${count.toString(36)},`;
+          prev = v;
+          count = 1;
+        }
+      }
+      out += `${prev.toString(36)}:${count.toString(36)}`;
+      return out;
+    }
+
+    function decodeGridRLE(str, targetGrid) {
+      if (!str) return;
+      const parts = str.split(',');
+      let idx = 0;
+      for (let i = 0; i < parts.length; i++) {
+        const [vStr, cStr] = parts[i].split(':');
+        const val = parseInt(vStr, 36) || 0;
+        const cnt = parseInt(cStr, 36) || 0;
+        const end = Math.min(targetGrid.length, idx + cnt);
+        targetGrid.fill(val, idx, end);
+        idx = end;
+      }
+    }
+
+    /* =========================================================================
+       6. محرك لعبة احتلال المساحات (PaperGame)
+       ========================================================================= */
+    class PaperGame {
+      constructor(canvas, minimapCanvas, transport) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d', { alpha: false });
+        this.minimapCanvas = minimapCanvas;
+        this.miniCtx = minimapCanvas.getContext('2d');
+        this.transport = transport;
+
+        // الحالة العامة
+        this.running = false;
+        this.mode = 'solo'; // solo | online_host | online_guest | local
+        this.difficulty = 'medium';
+        this.gridSize = 64;
+        this.cellPx = 30;
+        this.tickMs = 116; // ~8.6 خطوة بالثانية (سلسة ودقيقة جداً)
+
+        // بيانات الشبكة
+        this.grid = new Uint8Array(64 * 64);
+        this.trailGrid = new Uint8Array(64 * 64);
+        this.gridVersion = 0;
+
+        // مصفوفات BFS مُعاد استخدامها لتفادي استهلاك الذاكرة (Zero GC)
+        this._bfsVisited = new Uint8Array(66 * 66);
+        this._bfsQueue = new Int32Array(66 * 66);
+
+        // اللاعبون والمؤثرات البصرية
+        this.players = [];
+        this.myPlayerId = 1;
+        this.localP2Id = 2;
+        this.particles = [];
+        this.floatTexts = [];
+        this.floatingEmojis = [];
+        this.pendingNetEvents = [];
+
+        // الكاميرا والتوقيت
+        this.camX = 32;
+        this.camY = 32;
+        this.lastFrameTime = 0;
+        this.tickAccum = 0;
+        this.tickCount = 0;
+        this.roundDuration = 0; // 0 = مفتوح
+        this.timeLeft = 0;
+        this.gameOver = false;
+        this.botRespawnQueue = [];
+        this.respawnQueue = [];
+        this.allowBotRespawn = true;
+
+        // مزامنة الضيف
+        this.lastHostPacketTime = 0;
+        this.guestInterpStart = 0;
+        this.guestInterpDur = 120;
+        this._lastReqGridTime = 0;
+
+        // ديمو الخلفية أثناء التواجد في اللوبي
+        this.isAttractDemo = true;
+        this.setupAttractDemo();
+
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.canvas.width = Math.floor(w * dpr);
+        this.canvas.height = Math.floor(h * dpr);
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.viewW = w;
+        this.viewH = h;
+
+        // ضبط حجم الخلية حسب حجم الشاشة والوضع
+        if (this.mode === 'local' && !this.isAttractDemo) {
+          const margin = Math.min(w, h) * 0.08;
+          this.cellPx = Math.max(8, Math.floor(Math.min((w - margin) / this.gridSize, (h - margin) / this.gridSize)));
+        } else {
+          const minDim = Math.min(w, h);
+          this.cellPx = Math.max(22, Math.min(34, Math.floor(minDim / 17.5)));
+        }
+
+        // تحديث الخريطة المصغرة
+        const mSize = w < 640 ? 84 : 122;
+        this.minimapCanvas.width = mSize;
+        this.minimapCanvas.height = mSize;
+      }
+
+      /* تهيئة شبكة فارغة بالحجم المطلوب */
+      initGrid(size) {
+        this.gridSize = size;
+        this.grid = new Uint8Array(size * size);
+        this.trailGrid = new Uint8Array(size * size);
+        this._bfsVisited = new Uint8Array((size + 2) * (size + 2));
+        this._bfsQueue = new Int32Array((size + 2) * (size + 2));
+        this.gridVersion = 1;
+        this.particles = [];
+        this.floatTexts = [];
+        this.floatingEmojis = [];
+        this.pendingNetEvents = [];
+        this.botRespawnQueue = [];
+        this.respawnQueue = [];
+        this.tickCount = 0;
+        this.tickAccum = 0;
+        this.gameOver = false;
+      }
+
+      /* مشهد عرض حي في خلفية اللوبي */
+      setupAttractDemo() {
+        this.isAttractDemo = true;
+        this.running = true;
+        this.mode = 'solo';
+        this.initGrid(54);
+        this.players = [];
+        this.allowBotRespawn = true;
+        for (let i = 0; i < 6; i++) {
+          this.spawnPlayer({
+            id: i + 1,
+            uid: 'demo_' + i,
+            name: BOT_NAMES[i],
+            colorIdx: i % PALETTE.length,
+            isBot: true,
+            isHuman: false
+          });
+        }
+        this.camX = this.gridSize / 2;
+        this.camY = this.gridSize / 2;
+        this.resize();
+      }
+
+      /* بدء لعبة فردية */
+      startSolo(playerName, colorIdx, difficulty) {
+        this.isAttractDemo = false;
+        this.running = true;
+        this.mode = 'solo';
+        this.difficulty = difficulty;
+        this.roundDuration = 0;
+        this.timeLeft = 0;
+        this.allowBotRespawn = true;
+        this.initGrid(64);
+        this.players = [];
+
+        this.myPlayerId = 1;
+        this.spawnPlayer({
+          id: 1,
+          uid: 'me',
+          name: playerName || 'البطل',
+          colorIdx,
+          characterIdx: uiState.selectedCharacter,
+          isBot: false,
+          isHuman: true
+        });
+
+        const usedNames = new Set([playerName]);
+        const botColors = PALETTE.map((_, i) => i).filter(i => i !== colorIdx);
+        for (let i = 0; i < 6; i++) {
+          const bName = this._pickBotName(usedNames);
+          this.spawnPlayer({
+            id: i + 2,
+            uid: 'bot_' + (i + 2),
+            name: bName,
+            colorIdx: botColors[i % botColors.length],
+            isBot: true,
+            isHuman: false
+          });
+        }
+
+        const me = this.getPlayer(this.myPlayerId);
+        if (me) {
+          this.camX = me.x;
+          this.camY = me.y;
+        }
+        this.recalcScores();
+        this.resize();
+      }
+
+      /* بدء لعبة محلية لشخصين */
+      startLocal(p1Name, p1Color, p2Name, p2Color, withBots) {
+        this.isAttractDemo = false;
+        this.running = true;
+        this.mode = 'local';
+        this.difficulty = 'medium';
+        this.roundDuration = 0;
+        this.timeLeft = 0;
+        this.allowBotRespawn = false;
+        this.initGrid(44);
+        this.players = [];
+
+        this.myPlayerId = 1;
+        this.localP2Id = 2;
+        this.spawnPlayer({
+          id: 1, uid: 'p1', name: p1Name || 'اللاعب 1', colorIdx: p1Color, characterIdx:uiState.selectedCharacter, isBot: false, isHuman: true
+        }, 9, 22, 1);
+
+        const c2 = p2Color === p1Color ? (p1Color + 1) % PALETTE.length : p2Color;
+        this.spawnPlayer({
+          id: 2, uid: 'p2', name: p2Name || 'اللاعب 2', colorIdx: c2, characterIdx:0, isBot: false, isHuman: true
+        }, 34, 22, 3);
+
+        if (withBots) {
+          const used = new Set([p1Name, p2Name]);
+          const availColors = PALETTE.map((_, i) => i).filter(i => i !== p1Color && i !== c2);
+          for (let i = 0; i < 3; i++) {
+            this.spawnPlayer({
+              id: i + 3,
+              uid: 'bot_' + (i + 3),
+              name: this._pickBotName(used),
+              colorIdx: availColors[i % availColors.length],
+              isBot: true,
+              isHuman: false
+            });
+          }
+        }
+
+        this.camX = this.gridSize / 2;
+        this.camY = this.gridSize / 2;
+        this.recalcScores();
+        this.resize();
+      }
+
+      /* بدء لعبة أونلاين كمضيف (Host - المحاكاة الموثوقة) */
+      startOnlineHost(roomPlayers, withBots, durationSec) {
+        this.isAttractDemo = false;
+        this.running = true;
+        this.mode = 'online_host';
+        this.difficulty = 'medium';
+        this.roundDuration = 0;
+        this.timeLeft = this.roundDuration;
+        this.allowBotRespawn = true;
+        this.initGrid(64);
+        this.players = [];
+
+        const usedColors = new Set();
+        const usedNames = new Set();
+
+        roomPlayers.forEach((rp, idx) => {
+          const slotId = idx + 1;
+          let cIdx = rp.colorIdx;
+          if (usedColors.has(cIdx)) {
+            for (let k = 0; k < PALETTE.length; k++) {
+              if (!usedColors.has(k)) { cIdx = k; break; }
+            }
+          }
+          usedColors.add(cIdx);
+          usedNames.add(rp.name);
+          if (rp.uid === this.transport.clientId) {
+            this.myPlayerId = slotId;
+          }
+          this.spawnPlayer({
+            id: slotId,
+            uid: rp.uid,
+            name: rp.name,
+            colorIdx: cIdx,
+            characterIdx:rp.characterIdx||0,
+            isBot: false,
+            isHuman: true
+          });
+        });
+
+        if (withBots) {
+          const botCount = Math.max(3, 6 - roomPlayers.length);
+          let nextId = roomPlayers.length + 1;
+          for (let i = 0; i < botCount; i++) {
+            let cIdx = 0;
+            for (let k = 0; k < PALETTE.length; k++) {
+              if (!usedColors.has(k)) { cIdx = k; break; }
+              cIdx = (nextId + i) % PALETTE.length;
+            }
+            usedColors.add(cIdx);
+            this.spawnPlayer({
+              id: nextId++,
+              uid: 'bot_' + nextId,
+              name: this._pickBotName(usedNames),
+              colorIdx: cIdx,
+              isBot: true,
+              isHuman: false
+            });
+          }
+        }
+
+        const me = this.getPlayer(this.myPlayerId);
+        if (me) { this.camX = me.x; this.camY = me.y; }
+        this.recalcScores();
+        this.resize();
+        this.broadcastOnlineState(true);
+      }
+
+      /* بدء لعبة أونلاين كضيف (Guest - استقبال وحركة ناعمة 60fps) */
+      startOnlineGuest(initPacket) {
+        this.isAttractDemo = false;
+        this.running = true;
+        this.mode = 'online_guest';
+        this.roundDuration = 0;
+        this.timeLeft = initPacket.tl || 0;
+        this.initGrid(initPacket.gs || 64);
+        this.players = [];
+        this.lastHostPacketTime = performance.now();
+
+        this.applyOnlineState(initPacket);
+        const me = this.getPlayer(this.myPlayerId);
+        if (me) { this.camX = me.x; this.camY = me.y; }
+        this.resize();
+      }
+
+      _pickBotName(usedSet) {
+        const avail = BOT_NAMES.filter(n => !usedSet.has(n));
+        const pick = avail.length > 0
+          ? avail[Math.floor(Math.random() * avail.length)]
+          : 'بوت ' + Math.floor(Math.random() * 90 + 10);
+        usedSet.add(pick);
+        return pick;
+      }
+
+      getPlayer(id) {
+        return this.players.find(p => p.id === id) || null;
+      }
+
+      canSpawnAt(x,y,radius=1){
+        const W=this.gridSize;
+        if(x-radius<1||y-radius<1||x+radius>=W-1||y+radius>=W-1)return false;
+        for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+          const k=(y+dy)*W+x+dx;
+          if(this.grid[k]!==0||this.trailGrid[k]!==0)return false;
+        }
+        return this.players.every(p=>!p.alive||Math.hypot(p.x-x,p.y-y)>=radius+5);
+      }
+      findRespawnSpot(radius=1){
+        let best=null,dist=-Infinity,W=this.gridSize;
+        for(let y=2+radius;y<W-2-radius;y++)for(let x=2+radius;x<W-2-radius;x++){
+          if(!this.canSpawnAt(x,y,radius))continue;
+          let d=Infinity;
+          for(const p of this.players)if(p.alive)d=Math.min(d,Math.hypot(p.x-x,p.y-y));
+          if(d>dist){best={x,y};dist=d;}
+        }
+        return best;
+      }
+      /* إيجاد نقطة ولادة آمنة وبعيدة عن اللاعبين الآخرين وإنشاء قاعدة */
+      spawnPlayer(cfg, fixedX = null, fixedY = null, fixedDir = null) {
+        const margin = 5;
+        let bx = fixedX;
+        let by = fixedY;
+
+        if (bx === null || by === null) {
+          let bestDist = -1;
+          for (let tries = 0; tries < 50; tries++) {
+            const cx = margin + Math.floor(Math.random() * (this.gridSize - margin * 2));
+            const cy = margin + Math.floor(Math.random() * (this.gridSize - margin * 2));
+            // لا يُسمح بالظهور فوق أرض الخصوم أو ذيولهم
+            let blocked = false;
+            for (let dy = -2; dy <= 2 && !blocked; dy++) {
+              for (let dx = -2; dx <= 2; dx++) {
+                const idx = (cy + dy) * this.gridSize + (cx + dx);
+                if (this.trailGrid[idx] !== 0 || (Math.abs(dx)<=1&&Math.abs(dy)<=1&&this.grid[idx]!==0)) { blocked = true; break; }
+              }
+            }
+            if (blocked) continue;
+
+            let minDist = 9999;
+            for (const other of this.players) {
+              if (!other.alive) continue;
+              const d = Math.hypot(other.x - cx, other.y - cy);
+              if (d < minDist) minDist = d;
+            }
+            if (minDist > bestDist) {
+              bestDist = minDist;
+              bx = cx;
+              by = cy;
+              if (minDist >= 15) break;
+            }
+          }
+          if (bx === null) {
+            // لا تستبدل ممتلكات الخصم: ابحث عن خلية أرض خالية واحدة إن تعذر 3×3.
+            const pos=this.findRespawnSpot(1);
+            if(pos){bx=pos.x;by=pos.y;}
+            else return null;
+          }
+        }
+
+        // اختيار اتجاه مبدئي نحو مركز الساحة لتجنب الاصطدام الفوري بالحائط
+        let dir = fixedDir;
+        if (dir === null) {
+          const toCenterX = this.gridSize / 2 - bx;
+          const toCenterY = this.gridSize / 2 - by;
+          if (Math.abs(toCenterX) > Math.abs(toCenterY)) {
+            dir = toCenterX >= 0 ? 1 : 3;
+          } else {
+            dir = toCenterY >= 0 ? 2 : 0;
+          }
+        }
+
+        // قاعدة ولادة آمنة؛ لا تمسح أرض لاعب آخر مطلقاً.
+        const baseRadius=this.canSpawnAt(bx,by,1)?1:0;
+        if(!this.canSpawnAt(bx,by,baseRadius)) return null;
+        for (let dy = -baseRadius; dy <= baseRadius; dy++) {
+          for (let dx = -baseRadius; dx <= baseRadius; dx++) {
+            const idx = (by + dy) * this.gridSize + (bx + dx);
+            this.grid[idx] = cfg.id;
+            this.trailGrid[idx] = 0;
+          }
+        }
+        this.gridVersion++;
+
+        const existingIdx = this.players.findIndex(p => p.id === cfg.id);
+        const playerObj = {
+          id: cfg.id,
+          uid: cfg.uid,
+          name: cfg.name,
+          colorIdx: cfg.colorIdx,
+          characterIdx: Number.isInteger(cfg.characterIdx)?cfg.characterIdx:0,
+          respawnTicks: 0,
+          isBot: !!cfg.isBot,
+          isHuman: !!cfg.isHuman,
+          alive: true,
+          x: bx,
+          y: by,
+          prevX: bx,
+          prevY: by,
+          dir,
+          inputQueue: [],
+          trail: [],
+          kills: cfg.kills || 0,
+          cells: (baseRadius*2+1)**2,
+          scorePct: 0,
+          maxPct: cfg.maxPct || 0,
+          // ذاكرة الذكاء الاصطناعي
+          aiState: { mode: 'roam', stepsOut: 0, targetLoop: 6 }
+        };
+
+        if (existingIdx >= 0) {
+          this.players[existingIdx] = playerObj;
+        } else {
+          this.players.push(playerObj);
+        }
+        return playerObj;
+      }
+
+      /* إدخال تغيير اتجاه للاعب مع منع الانعكاس الفوري 180 درجة وتخزين مؤقت للحركات */
+      queueDirection(playerId, newDir) {
+        if (!this.running || this.gameOver || this.isAttractDemo) return;
+        if (newDir < 0 || newDir > 3) return;
+
+        if (this.mode === 'online_guest') {
+          const me = this.getPlayer(this.myPlayerId);
+          if (!me || !me.alive) return;
+          const refDir = me.inputQueue.length > 0 ? me.inputQueue[me.inputQueue.length - 1] : me.dir;
+          if (newDir === refDir || (newDir + 2) % 4 === refDir) return;
+          me.inputQueue = [newDir];
+          sound.playTurn();
+          this.transport.send({ t: 'in', d: newDir });
+          return;
+        }
+
+        const p = this.getPlayer(playerId);
+        if (!p || !p.alive) return;
+        const lastQueued = p.inputQueue.length > 0 ? p.inputQueue[p.inputQueue.length - 1] : p.dir;
+        // تجاهل نفس الاتجاه أو الانعكاس 180 درجة لحماية اللاعب من قتل نفسه بالخطأ
+        if (newDir === lastQueued || (newDir + 2) % 4 === lastQueued) return;
+        if (p.inputQueue.length < 2) {
+          p.inputQueue.push(newDir);
+        } else {
+          p.inputQueue[1] = newDir;
+        }
+        if (playerId === this.myPlayerId || (this.mode === 'local' && playerId === this.localP2Id)) {
+          sound.playTurn();
+        }
+      }
+
+      /* إرسال إيموجي عائم فوق رأس اللاعب */
+      triggerEmoji(playerId, emoji, fromNet = false) {
+        const p = this.getPlayer(playerId);
+        if (!p || !p.alive) return;
+        this.floatingEmojis.push({
+          playerId,
+          emoji,
+          life: 2.2,
+          maxLife: 2.2
+        });
+        if (!fromNet && this.mode === 'online_guest') {
+          this.transport.send({ t: 'em', e: emoji });
+        } else if (!fromNet && this.mode === 'online_host') {
+          this.pendingNetEvents.push({ k: 'em', p: playerId, e: emoji });
+        }
+      }
+
+      /* =====================================================================
+         منطق خطوة المحاكاة الحتمية (Deterministic Grid Tick)
+         ===================================================================== */
+      stepSimulation() {
+        if (this.gameOver) return;
+        this.tickCount++;
+
+        // تحديث المؤقت إن وجد
+        if (this.roundDuration > 0 && !this.isAttractDemo) {
+          this.timeLeft = Math.max(0, this.timeLeft - this.tickMs / 1000);
+          if (this.timeLeft <= 0) {
+            this.finishRound('time');
+            return;
+          }
+        }
+
+        // كل لاعب مقصى يعود بعد عشر ثوانٍ؛ المزامنة تتم عند المضيف فقط.
+        for(let i=this.respawnQueue.length-1;i>=0;i--){
+          const entry=this.respawnQueue[i];
+          entry.ticks--;
+          const victim=this.getPlayer(entry.id);
+          if(victim)victim.respawnTicks=Math.max(0,entry.ticks);
+          if(entry.ticks>0)continue;
+          const spot=this.findRespawnSpot(1)||this.findRespawnSpot(0);
+          if(!spot){entry.ticks=1;continue;} // ننتظر أول خانة فارغة بدل الكتابة فوق الخصم.
+          const p=this.spawnPlayer(entry.cfg,spot.x,spot.y);
+          if(!p){entry.ticks=1;continue;}
+          this.respawnQueue.splice(i,1);
+          this.recalcScores();
+          if(this.mode==='online_host')this.pendingNetEvents.push({k:'respawn',p:p.id,x:p.x,y:p.y});
+          if(!this.isAttractDemo&&p.id===this.myPlayerId)showToast('رجعت للساحة! 🛡️','success');
+        }
+
+        const alivePlayers = this.players.filter(p => p.alive);
+
+        // 1. قرارات الذكاء الاصطناعي وتحديث اتجاه كل لاعب وحساب الخلية المستهدفة
+        const nextPos = new Map();
+        for (const p of alivePlayers) {
+          if (p.isBot) {
+            this.computeBotMove(p);
+          }
+          if (p.inputQueue.length > 0) {
+            const candidate = p.inputQueue.shift();
+            if ((candidate + 2) % 4 !== p.dir) {
+              p.dir = candidate;
+            }
+          }
+          p.prevX = p.x;
+          p.prevY = p.y;
+          const d = DIRS[p.dir];
+          nextPos.set(p.id, { nx: p.x + d.dx, ny: p.y + d.dy });
+        }
+
+        // قائمة الإقصاءات لهذه الخطوة: Map<victimId, {killerId, reason}>
+        const eliminations = new Map();
+        const markElim = (victimId, killerId, reason) => {
+          if (!eliminations.has(victimId)) {
+            eliminations.set(victimId, { killerId, reason });
+          }
+        };
+
+        // 2. الحواف حواجز آمنة: إيقاف اللاعب دون إقصاء أو إلحاق ذيل.
+        for (const p of alivePlayers) {
+          const next=nextPos.get(p.id);
+          if (next.nx<0||next.nx>=this.gridSize||next.ny<0||next.ny>=this.gridSize){
+            next.nx=p.x;next.ny=p.y;next.stopped=true;
+          }
+        }
+
+        // 3. فحص التصادم وجهاً لوجه (نفس الخلية المستهدفة أو تبادل المواقع)
+        for (let i = 0; i < alivePlayers.length; i++) {
+          const a = alivePlayers[i];
+          if (eliminations.has(a.id)) continue;
+          const na = nextPos.get(a.id);
+
+          for (let j = i + 1; j < alivePlayers.length; j++) {
+            const b = alivePlayers[j];
+            if (eliminations.has(b.id)) continue;
+            const nb = nextPos.get(b.id);
+
+            const sameTarget = (na.nx === nb.nx && na.ny === nb.ny);
+            const swapped = (na.nx === b.x && na.ny === b.y && nb.nx === a.x && nb.ny === a.y);
+
+            if (sameTarget || swapped) {
+              const aInOwn = this.grid[na.ny * this.gridSize + na.nx] === a.id;
+              const bInOwn = this.grid[nb.ny * this.gridSize + nb.nx] === b.id;
+              if (aInOwn && !bInOwn) {
+                markElim(b.id, a.id, 'headon');
+              } else if (bInOwn && !aInOwn) {
+                markElim(a.id, b.id, 'headon');
+              } else {
+                markElim(a.id, b.id, 'headon');
+                markElim(b.id, a.id, 'headon');
+              }
+            }
+          }
+        }
+
+        // 4. تحريك اللاعبين غير المصطدمين بالجدار وفحص قطع الذيول
+        for (const p of alivePlayers) {
+          if (eliminations.has(p.id)) continue;
+          const { nx, ny, stopped } = nextPos.get(p.id);
+          if(stopped)continue;
+          p.x = nx;
+          p.y = ny;
+
+          const cellIdx = ny * this.gridSize + nx;
+          const trailOwner = this.trailGrid[cellIdx];
+          if (trailOwner !== 0) {
+            if (trailOwner === p.id) {
+              markElim(p.id, null, 'self');
+            } else {
+              markElim(trailOwner, p.id, 'cut');
+            }
+          }
+        }
+
+        // 5. تنفيذ جميع الإقصاءات
+        if (eliminations.size > 0) {
+          for (const [victimId, info] of eliminations.entries()) {
+            this.eliminatePlayer(victimId, info.killerId, info.reason);
+          }
+        }
+
+        // 6. تحديث الذيل واحتلال المساحات (Exact Flood-Fill) للناجين
+        for (const p of alivePlayers) {
+          if (!p.alive || nextPos.get(p.id)?.stopped) continue;
+          const cellIdx = p.y * this.gridSize + p.x;
+          if (this.grid[cellIdx] === p.id) {
+            // عاد إلى أرضه! احتلال المساحة إذا كان لديه ذيل
+            if (p.trail.length > 0) {
+              this.captureTerritory(p);
+            }
+          } else {
+            // خارج أرضه: إضافة الخلية للذيل
+            p.trail.push({ x: p.x, y: p.y });
+            this.trailGrid[cellIdx] = p.id;
+          }
+        }
+
+        // 7. إعادة حساب النسب والتحقق من اللاعبين الذين ابتُلعت أرضهم بالكامل
+        this.recalcScores();
+        for (const p of this.players) {
+          if (p.alive && p.cells === 0) {
+            this.eliminatePlayer(p.id, null, 'swallowed');
+          }
+        }
+        this.recalcScores();
+
+        // 8. فحص شروط الفوز ونهاية الجولة
+        this.checkEndConditions();
+
+        // 9. بث الحالة للاعبين أونلاين إذا كنا المضيف
+        if (this.mode === 'online_host') {
+          const isNtfy = this.transport.activeServer === 'ntfy';
+          const forceGrid = this.gridVersion !== this._lastSentGridVer;
+          const hasEvents = this.pendingNetEvents.length > 0;
+          // على ntfy نرسل كل خطوتين أو فوراً عند وجود حدث/احتلال لضمان سرعة واستقرار مثالي
+          if (!isNtfy || forceGrid || hasEvents || this.tickCount % 2 === 0 || this.gameOver) {
+            this.broadcastOnlineState(forceGrid);
+          }
+        }
+      }
+
+      /* خوارزمية Flood-Fill الدقيقة عبر حدود افتراضية (1-Cell Padded BFS) */
+      captureTerritory(player) {
+        const W = this.gridSize;
+        const pId = player.id;
+        let capturedCount = 0;
+
+        // أولاً: تحويل جميع خلايا الذيل إلى أرض مملوكة
+        for (let i = 0; i < player.trail.length; i++) {
+          const pt = player.trail[i];
+          const idx = pt.y * W + pt.x;
+          if (this.grid[idx] !== pId) {
+            this.grid[idx] = pId;
+            capturedCount++;
+          }
+          if (this.trailGrid[idx] === pId) {
+            this.trailGrid[idx] = 0;
+          }
+        }
+        player.trail.length = 0;
+
+        // ثانياً: BFS من الإطار الافتراضي الخارجي بحجم (W+2) × (W+2)
+        const PW = W + 2;
+        const visited = this._bfsVisited;
+        const queue = this._bfsQueue;
+        visited.fill(0);
+
+        let head = 0;
+        let tail = 0;
+        visited[0] = 1;
+        queue[tail++] = 0;
+
+        while (head < tail) {
+          const curr = queue[head++];
+          const px = curr % PW;
+          const py = (curr - px) / PW;
+
+          // الجيران الأربعة
+          // أعلى
+          if (py > 0) {
+            const ni = curr - PW;
+            if (!visited[ni]) {
+              const rx = px - 1, ry = py - 2;
+              if (rx < 0 || rx >= W || ry < 0 || ry >= W || this.grid[ry * W + rx] !== pId) {
+                visited[ni] = 1;
+                queue[tail++] = ni;
+              }
+            }
+          }
+          // أسفل
+          if (py < PW - 1) {
+            const ni = curr + PW;
+            if (!visited[ni]) {
+              const rx = px - 1, ry = py;
+              if (rx < 0 || rx >= W || ry < 0 || ry >= W || this.grid[ry * W + rx] !== pId) {
+                visited[ni] = 1;
+                queue[tail++] = ni;
+              }
+            }
+          }
+          // يسار
+          if (px > 0) {
+            const ni = curr - 1;
+            if (!visited[ni]) {
+              const rx = px - 2, ry = py - 1;
+              if (rx < 0 || rx >= W || ry < 0 || ry >= W || this.grid[ry * W + rx] !== pId) {
+                visited[ni] = 1;
+                queue[tail++] = ni;
+              }
+            }
+          }
+          // يمين
+          if (px < PW - 1) {
+            const ni = curr + 1;
+            if (!visited[ni]) {
+              const rx = px, ry = py - 1;
+              if (rx < 0 || rx >= W || ry < 0 || ry >= W || this.grid[ry * W + rx] !== pId) {
+                visited[ni] = 1;
+                queue[tail++] = ni;
+              }
+            }
+          }
+        }
+
+        // ثالثاً: كل خلية داخلية لم يصلها الـ BFS فهي محاصرة بالكامل -> تتحول فوراً لملكية اللاعب!
+        for (let y = 0; y < W; y++) {
+          const pRow = (y + 1) * PW + 1;
+          const gRow = y * W;
+          for (let x = 0; x < W; x++) {
+            if (!visited[pRow + x] && this.grid[gRow + x] !== pId) {
+              this.grid[gRow + x] = pId;
+              capturedCount++;
+            }
+          }
+        }
+
+        this.gridVersion++;
+
+        // مؤثرات بصرية وصوتية عند الاحتلال
+        const gainedPct = (capturedCount / (W * W)) * 100;
+        const col = PALETTE[player.colorIdx];
+        this.spawnBurst(player.x + 0.5, player.y + 0.5, col.main, Math.min(28, 8 + Math.floor(capturedCount / 3)));
+
+        if (gainedPct >= 0.2) {
+          const text = `+${gainedPct.toFixed(1)}%`;
+          this.floatTexts.push({
+            x: player.x + 0.5,
+            y: player.y - 0.2,
+            text,
+            color: '#ffffff',
+            bg: col.dark,
+            life: 1.15,
+            maxLife: 1.15
+          });
+        }
+
+        if (!this.isAttractDemo && (player.id === this.myPlayerId || (this.mode === 'local' && player.id === this.localP2Id))) {
+          sound.playCapture(capturedCount);
+        }
+
+        if (this.mode === 'online_host') {
+          this.pendingNetEvents.push({
+            k: 'cap', p: player.id, x: player.x, y: player.y, c: capturedCount
+          });
+        }
+      }
+
+      /* إقصاء لاعب ومسح أرضه وذيله وتحديث إشعارات القتل */
+      eliminatePlayer(victimId, killerId, reason) {
+        const victim = this.getPlayer(victimId);
+        if (!victim || !victim.alive) return;
+        victim.alive = false;
+
+        const W = this.gridSize;
+        for (let i = 0; i < W * W; i++) {
+          if (this.grid[i] === victimId) this.grid[i] = 0;
+          if (this.trailGrid[i] === victimId) this.trailGrid[i] = 0;
+        }
+        victim.trail.length = 0;
+        this.gridVersion++;
+
+        const col = PALETTE[victim.colorIdx];
+        this.spawnBurst(victim.x + 0.5, victim.y + 0.5, col.main, 32);
+
+        const killer = killerId ? this.getPlayer(killerId) : null;
+        if (killer && killer.id !== victim.id) {
+          killer.kills++;
+        }
+
+        if (!this.isAttractDemo) {
+          const isMe = victim.id === this.myPlayerId;
+          const isMyKill = killer && killer.id === this.myPlayerId;
+          if (isMe || isMyKill || this.mode === 'local') {
+            sound.playElimination(isMe);
+          }
+
+          let feedMsg = '';
+          if (killer && killer.id !== victim.id) {
+            feedMsg = `🔥 ${killer.name} قطع ذيل ${victim.name}!`;
+          } else if (reason === 'wall') {
+            feedMsg = `💥 ${victim.name} اصطدم بالجدار!`;
+          } else if (reason === 'self') {
+            feedMsg = `⚡ ${victim.name} قطع ذيله بنفسه!`;
+          } else {
+            feedMsg = `🏴 تم ابتلاع أرض ${victim.name}!`;
+          }
+          addKillFeed(feedMsg);
+
+          if (this.mode === 'online_host') {
+            this.pendingNetEvents.push({
+              k: 'kill', v: victim.id, kr: killer ? killer.id : 0, x: victim.x, y: victim.y, msg: feedMsg
+            });
+          }
+        }
+
+        // لا تنتهي الجولة بسبب الإقصاء. عودة لجميع البشر والبوتات بعد 10 ثوانٍ.
+        const ticks=Math.ceil(RESPAWN_SECONDS*1000/this.tickMs);
+        victim.respawnTicks=ticks;
+        this.respawnQueue=this.respawnQueue.filter(e=>e.id!==victim.id);
+        this.respawnQueue.push({id:victim.id,ticks,cfg:{
+          id:victim.id,uid:victim.uid,name:victim.name,colorIdx:victim.colorIdx,
+          characterIdx:victim.characterIdx,isBot:victim.isBot,isHuman:victim.isHuman,
+          kills:victim.kills,maxPct:victim.maxPct
+        }});
+      }
+
+      /* حساب النسب المئوية لجميع اللاعبين */
+      recalcScores() {
+        const total = this.gridSize * this.gridSize;
+        const counts = new Int32Array(20);
+        for (let i = 0; i < total; i++) {
+          const owner = this.grid[i];
+          if (owner > 0 && owner < 20) counts[owner]++;
+        }
+        for (const p of this.players) {
+          p.cells = p.alive ? counts[p.id] : 0;
+          p.scorePct = (p.cells / total) * 100;
+          if (p.scorePct > p.maxPct) p.maxPct = p.scorePct;
+        }
+      }
+
+      /* فحص شروط نهاية الجولة */
+      checkEndConditions() {
+        if (this.isAttractDemo || this.gameOver) return;
+
+        // نصر بالسيطرة فقط؛ الإقصاء مؤقت ولا يحسم الجولة.
+        const conqueror=this.players.find(p=>p.alive&&p.scorePct>=VICTORY_PERCENT);
+        if(conqueror)this.finishRound('conquest',conqueror);
+      }
+
+      finishRound(reason, winnerOverride = null) {
+        if (this.gameOver) return;
+        this.gameOver = true;
+        if (this.mode === 'online_host') {
+          this.pendingNetEvents.push({ k: 'end', r: reason });
+          this.broadcastOnlineState(true);
+        }
+        showGameOverModal(this, reason, winnerOverride);
+      }
+
+      /* =====================================================================
+         الذكاء الاصطناعي المتدرج (سهل / متوسط / صعب)
+         ===================================================================== */
+      computeBotMove(bot) {
+        const W = this.gridSize;
+        const candidates = [bot.dir, (bot.dir + 1) % 4, (bot.dir + 3) % 4];
+        const safeMoves = [];
+
+        for (const dIdx of candidates) {
+          const d = DIRS[dIdx];
+          const nx = bot.x + d.dx;
+          const ny = bot.y + d.dy;
+          if (nx < 0 || nx >= W || ny < 0 || ny >= W) continue;
+          const idx = ny * W + nx;
+          if (this.trailGrid[idx] === bot.id) continue; // لا تقطع ذيلك!
+          safeMoves.push({ dIdx, nx, ny, idx });
+        }
+
+        if (safeMoves.length === 0) return;
+
+        // فحص إذا كان البوت داخل أرضه أم خارجها
+        const inOwn = this.grid[bot.y * W + bot.x] === bot.id;
+        if (inOwn) {
+          bot.aiState.stepsOut = 0;
+          const maxLoop = this.difficulty === 'easy' ? 5 : (this.difficulty === 'medium' ? 11 : 16);
+          bot.aiState.targetLoop = 3 + Math.floor(Math.random() * maxLoop);
+        } else {
+          bot.aiState.stepsOut++;
+        }
+
+        // حساب أقرب خلية أرض يملكها البوت (أخذ عينات سريعة)
+        let homeX = bot.x, homeY = bot.y, bestHomeDist = 9999;
+        if (!inOwn) {
+          const radius = 18;
+          const minX = Math.max(0, bot.x - radius), maxX = Math.min(W - 1, bot.x + radius);
+          const minY = Math.max(0, bot.y - radius), maxY = Math.min(W - 1, bot.y + radius);
+          for (let y = minY; y <= maxY; y += 2) {
+            const row = y * W;
+            for (let x = minX; x <= maxX; x += 2) {
+              if (this.grid[row + x] === bot.id) {
+                const dist = Math.abs(x - bot.x) + Math.abs(y - bot.y);
+                if (dist < bestHomeDist) {
+                  bestHomeDist = dist;
+                  homeX = x;
+                  homeY = y;
+                }
+              }
+            }
+          }
+        }
+
+        // هل هناك خصم قريب يهدد ذيل البوت؟
+        let threatened = false;
+        if (!inOwn && this.difficulty !== 'easy') {
+          const dangerRad = this.difficulty === 'hard' ? 7 : 5;
+          for (const other of this.players) {
+            if (!other.alive || other.id === bot.id) continue;
+            for (let i = 0; i < bot.trail.length; i += 2) {
+              const t = bot.trail[i];
+              if (Math.abs(other.x - t.x) + Math.abs(other.y - t.y) <= dangerRad) {
+                threatened = true;
+                break;
+              }
+            }
+            if (threatened) break;
+          }
+        }
+
+        const wantReturn = !inOwn && (threatened || bot.aiState.stepsOut >= bot.aiState.targetLoop);
+
+        // تقييم كل حركة آمنة
+        let bestMove = safeMoves[0];
+        let bestScore = -1e9;
+
+        for (const m of safeMoves) {
+          let score = Math.random() * 4;
+
+          // 1. تجنب الطرق المسدودة (تحقق من وجود مخرج واحد على الأقل بعد الحركة)
+          let exits = 0;
+          for (let k = 0; k < 4; k++) {
+            if ((k + 2) % 4 === m.dIdx) continue;
+            const ex = m.nx + DIRS[k].dx, ey = m.ny + DIRS[k].dy;
+            if (ex >= 0 && ex < W && ey >= 0 && ey < W && this.trailGrid[ey * W + ex] !== bot.id) {
+              exits++;
+            }
+          }
+          if (exits === 0) score -= 500;
+
+          // 2. فرصة فورية لقطع ذيل خصم!
+          const tOwner = this.trailGrid[m.idx];
+          if (tOwner !== 0 && tOwner !== bot.id) {
+            score += this.difficulty === 'easy' ? 35 : 220;
+          }
+
+          // 3. مطاردة ذيل مكشوف قريب في المتوسط والصعب
+          if (this.difficulty !== 'easy' && !threatened && bot.aiState.stepsOut < 14) {
+            const huntRange = this.difficulty === 'hard' ? 7 : 4;
+            for (const other of this.players) {
+              if (!other.alive || other.id === bot.id || other.trail.length === 0) continue;
+              const sample = other.trail[Math.floor(other.trail.length / 2)];
+              const curD = Math.abs(sample.x - bot.x) + Math.abs(sample.y - bot.y);
+              const newD = Math.abs(sample.x - m.nx) + Math.abs(sample.y - m.ny);
+              if (curD <= huntRange && newD < curD) {
+                score += this.difficulty === 'hard' ? 60 : 28;
+              }
+            }
+          }
+
+          // 4. منطق العودة للأرض أو التوسع
+          if (wantReturn) {
+            if (this.grid[m.idx] === bot.id) {
+              score += 140;
+            } else if (bestHomeDist < 9999) {
+              const newDist = Math.abs(homeX - m.nx) + Math.abs(homeY - m.ny);
+              score += (bestHomeDist - newDist) * 28;
+            }
+          } else {
+            // تشجيع الخروج وتشكيل حلقات نظيفة
+            if (this.grid[m.idx] !== bot.id) score += 16;
+            // تقليل الالتفافات المتكررة غير المفيدة
+            if (m.dIdx === bot.dir) score += 7;
+            // الابتعاد قليلاً عن الجدران
+            const wallDist = Math.min(m.nx, W - 1 - m.nx, m.ny, W - 1 - m.ny);
+            if (wallDist <= 1) score -= 24;
+            else if (wallDist <= 3) score -= 6;
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = m;
+          }
+        }
+
+        if (bestMove.dIdx !== bot.dir) {
+          bot.inputQueue = [bestMove.dIdx];
+        }
+      }
+
+      /* =====================================================================
+         بث واستقبال حالة اللعبة أونلاين (Host <-> Guest)
+         ===================================================================== */
+      broadcastOnlineState(includeGrid) {
+        if (this.mode !== 'online_host') return;
+        const compactPlayers = this.players.map(p => ({
+          i: p.id,
+          u: p.uid,
+          n: p.name,
+          c: p.colorIdx,
+          ch: p.characterIdx||0,
+          rt: p.respawnTicks||0,
+          b: p.isBot ? 1 : 0,
+          a: p.alive ? 1 : 0,
+          x: p.x,
+          y: p.y,
+          d: p.dir,
+          k: p.kills,
+          m: Math.round(p.maxPct * 10) / 10,
+          tr: p.trail.map(pt => pt.y * this.gridSize + pt.x)
+        }));
+
+        const pkt = {
+          t: 'st',
+          gs: this.gridSize,
+          gv: this.gridVersion,
+          dur: this.roundDuration,
+          tl: Math.round(this.timeLeft * 10) / 10,
+          go: this.gameOver ? 1 : 0,
+          p: compactPlayers
+        };
+
+        if (includeGrid) {
+          pkt.g = encodeGridRLE(this.grid);
+          this._lastSentGridVer = this.gridVersion;
+        }
+        if (this.pendingNetEvents.length > 0) {
+          pkt.ev = this.pendingNetEvents;
+          this.pendingNetEvents = [];
+        }
+
+        this.transport.send(pkt);
+      }
+
+      applyOnlineState(pkt) {
+        this.lastHostPacketTime = performance.now();
+        this.guestInterpStart = performance.now();
+        this.guestInterpDur = this.transport.activeServer === 'ntfy' ? 210 : 122;
+
+        if (pkt.dur !== undefined) this.roundDuration = pkt.dur;
+        if (pkt.tl !== undefined) this.timeLeft = pkt.tl;
+
+        // فك ضغط الشبكة عند التحديث
+        if (pkt.g) {
+          decodeGridRLE(pkt.g, this.grid);
+          this.gridVersion = pkt.gv;
+        } else if (pkt.gv && pkt.gv !== this.gridVersion) {
+          // طلب تحديث الشبكة إذا فاتت الضيف حزمة سابقة
+          const now = performance.now();
+          if (now - this._lastReqGridTime > 900) {
+            this._lastReqGridTime = now;
+            this.transport.send({ t: 'req_g' });
+          }
+        }
+
+        // إعادة بناء trailGrid ومواقع اللاعبين مع الحفاظ على prevX/prevY للانسيابية
+        this.trailGrid.fill(0);
+        const W = this.gridSize;
+        const newPlayers = [];
+
+        for (const sp of (pkt.p || [])) {
+          const old = this.players.find(op => op.id === sp.i);
+          if (sp.u === this.transport.clientId) {
+            this.myPlayerId = sp.i;
+          }
+          const trailArr = [];
+          if (sp.tr && sp.a) {
+            for (let k = 0; k < sp.tr.length; k++) {
+              const idx = sp.tr[k];
+              const ty = Math.floor(idx / W);
+              const tx = idx - ty * W;
+              trailArr.push({ x: tx, y: ty });
+              this.trailGrid[idx] = sp.i;
+            }
+          }
+          // تجنب القفزة البصرية عند الولادة من جديد
+          const jumped = !old || !old.alive || Math.abs(old.x - sp.x) > 3 || Math.abs(old.y - sp.y) > 3;
+          newPlayers.push({
+            id: sp.i,
+            uid: sp.u,
+            name: sp.n,
+            colorIdx: sp.c,
+            characterIdx: sp.ch||0,
+            respawnTicks: sp.rt||0,
+            isBot: sp.b === 1,
+            isHuman: sp.b !== 1,
+            alive: sp.a === 1,
+            prevX: jumped ? sp.x : old.x,
+            prevY: jumped ? sp.y : old.y,
+            x: sp.x,
+            y: sp.y,
+            dir: sp.d,
+            inputQueue: [],
+            trail: trailArr,
+            kills: sp.k || 0,
+            cells: 0,
+            scorePct: 0,
+            maxPct: sp.m || 0
+          });
+        }
+
+        this.players = newPlayers;
+        this.recalcScores();
+
+        // معالجة الأحداث الواردة (احتلال، قتل، إيموجي، نهاية)
+        if (pkt.ev && pkt.ev.length > 0) {
+          for (const ev of pkt.ev) {
+            if (ev.k === 'cap') {
+              const pl = this.getPlayer(ev.p);
+              const col = pl ? PALETTE[pl.colorIdx] : PALETTE[0];
+              this.spawnBurst(ev.x + 0.5, ev.y + 0.5, col.main, Math.min(26, 8 + Math.floor(ev.c / 3)));
+              const gainedPct = (ev.c / (W * W)) * 100;
+              if (gainedPct >= 0.2) {
+                this.floatTexts.push({
+                  x: ev.x + 0.5, y: ev.y - 0.2,
+                  text: `+${gainedPct.toFixed(1)}%`,
+                  color: '#fff', bg: col.dark, life: 1.15, maxLife: 1.15
+                });
+              }
+              if (ev.p === this.myPlayerId) sound.playCapture(ev.c);
+            } else if (ev.k === 'kill') {
+              const v = this.getPlayer(ev.v);
+              const col = v ? PALETTE[v.colorIdx] : PALETTE[0];
+              this.spawnBurst(ev.x + 0.5, ev.y + 0.5, col.main, 30);
+              if (ev.msg) addKillFeed(ev.msg);
+              if (ev.v === this.myPlayerId || ev.kr === this.myPlayerId) {
+                sound.playElimination(ev.v === this.myPlayerId);
+              }
+            } else if (ev.k === 'em') {
+              this.triggerEmoji(ev.p, ev.e, true);
+            } else if (ev.k === 'end') {
+              if (!this.gameOver) {
+                this.gameOver = true;
+                showGameOverModal(this, ev.r || 'ended');
+              }
+            }
+          }
+        }
+
+        if (pkt.go === 1 && !this.gameOver) {
+          this.gameOver = true;
+          showGameOverModal(this, 'ended');
+        }
+      }
+
+      /* =====================================================================
+         نظام الجزيئات المتطايرة
+         ===================================================================== */
+      spawnBurst(gx, gy, color, count) {
+        for (let i = 0; i < count; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 1.5 + Math.random() * 5.2;
+          this.particles.push({
+            x: gx,
+            y: gy,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            size: 0.14 + Math.random() * 0.22,
+            color,
+            life: 0.45 + Math.random() * 0.35,
+            maxLife: 0.8
+          });
+        }
+      }
+
+      /* =====================================================================
+         حلقة التحديث والرسم 60fps مع الاستيفاء السلس (Smooth Interpolation)
+         ===================================================================== */
+      update(dt) {
+        const clampedDt = Math.min(dt, 0.08);
+
+        if (this.running && !this.gameOver) {
+          if (this.mode === 'online_guest') {
+            // فحص انقطاع اتصال المضيف
+            if (this.lastHostPacketTime > 0 && performance.now() - this.lastHostPacketTime > 9000) {
+              this.lastHostPacketTime = performance.now();
+              showToast('انقطع الاتصال مع المضيف مؤقتاً...', 'warn');
+            }
+          } else {
+            this.tickAccum += clampedDt * 1000;
+            let guard = 0;
+            while (this.tickAccum >= this.tickMs && guard < 3) {
+              this.tickAccum -= this.tickMs;
+              this.stepSimulation();
+              guard++;
+            }
+          }
+        }
+
+        // تحديث الجزيئات والنصوص العائمة والإيموجي
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const pt = this.particles[i];
+          pt.x += pt.vx * clampedDt;
+          pt.y += pt.vy * clampedDt;
+          pt.vx *= 0.92;
+          pt.vy *= 0.92;
+          pt.life -= clampedDt;
+          if (pt.life <= 0) this.particles.splice(i, 1);
+        }
+
+        for (let i = this.floatTexts.length - 1; i >= 0; i--) {
+          const ft = this.floatTexts[i];
+          ft.y -= 1.3 * clampedDt;
+          ft.life -= clampedDt;
+          if (ft.life <= 0) this.floatTexts.splice(i, 1);
+        }
+
+        for (let i = this.floatingEmojis.length - 1; i >= 0; i--) {
+          const fe = this.floatingEmojis[i];
+          fe.life -= clampedDt;
+          if (fe.life <= 0) this.floatingEmojis.splice(i, 1);
+        }
+
+        // حساب معامل الاستيفاء الخطي (0..1)
+        let alpha = 1;
+        if (this.mode === 'online_guest') {
+          alpha = Math.min(1, (performance.now() - this.guestInterpStart) / this.guestInterpDur);
+        } else {
+          alpha = Math.min(1, this.tickAccum / this.tickMs);
+        }
+
+        // تحديث الكاميرا بسلاسة
+        if (this.mode === 'local' && !this.isAttractDemo) {
+          this.camX = this.gridSize / 2;
+          this.camY = this.gridSize / 2;
+        } else if (this.isAttractDemo) {
+          const t = performance.now() * 0.00025;
+          this.camX = this.gridSize / 2 + Math.cos(t) * 10;
+          this.camY = this.gridSize / 2 + Math.sin(t * 0.8) * 10;
+        } else {
+          let target = this.getPlayer(this.myPlayerId);
+          // وضع المشاهدة: متابعة لاعب بشري حي أو المتصدر
+          if (!target || !target.alive) {
+            target = this.players.find(p => p.alive && p.isHuman)
+              || this.players.find(p => p.alive)
+              || target;
+          }
+          if (target) {
+            const tx = target.prevX + (target.x - target.prevX) * alpha + 0.5;
+            const ty = target.prevY + (target.y - target.prevY) * alpha + 0.5;
+            const smooth = 1 - Math.pow(0.0012, clampedDt);
+            this.camX += (tx - this.camX) * smooth;
+            this.camY += (ty - this.camY) * smooth;
+          }
+        }
+
+        this.render(alpha);
+
+        if (!this.isAttractDemo) {
+          this.renderMinimap(alpha);
+          updateHud(this);
+        }
+      }
+
+      render(alpha) {
+        const ctx = this.ctx;
+        const W = this.gridSize;
+        const cs = this.cellPx;
+        const vw = this.viewW;
+        const vh = this.viewH;
+
+        // خلفية منطقة الخطر خارج الساحة
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, vw, vh);
+
+        const offsetX = Math.round(vw / 2 - this.camX * cs);
+        const offsetY = Math.round(vh / 2 - this.camY * cs);
+
+        // حساب نطاق الخلايا المرئية فقط لأداء فائق (60fps ثابت حتى على الموبايل)
+        const minC = Math.max(0, Math.floor(-offsetX / cs) - 1);
+        const maxC = Math.min(W - 1, Math.ceil((vw - offsetX) / cs) + 1);
+        const minR = Math.max(0, Math.floor(-offsetY / cs) - 1);
+        const maxR = Math.min(W - 1, Math.ceil((vh - offsetY) / cs) + 1);
+
+        // أرضية الساحة النظيفة
+        const arenaX = offsetX;
+        const arenaY = offsetY;
+        const arenaPx = W * cs;
+
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(arenaX, arenaY, arenaPx, arenaPx);
+
+        // خطوط الشبكة الخفيفة الأنيقة
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let c = minC; c <= maxC + 1; c++) {
+          const x = arenaX + c * cs + 0.5;
+          ctx.moveTo(x, Math.max(arenaY, arenaY + minR * cs));
+          ctx.lineTo(x, Math.min(arenaY + arenaPx, arenaY + (maxR + 1) * cs));
+        }
+        for (let r = minR; r <= maxR + 1; r++) {
+          const y = arenaY + r * cs + 0.5;
+          ctx.moveTo(Math.max(arenaX, arenaX + minC * cs), y);
+          ctx.lineTo(Math.min(arenaX + arenaPx, arenaX + (maxC + 1) * cs), y);
+        }
+        ctx.stroke();
+
+        // خريطة ألوان سريعة لكل معرّف لاعب
+        const colorMap = new Array(20);
+        for (const p of this.players) {
+          colorMap[p.id] = PALETTE[p.colorIdx];
+        }
+
+        // رسم المساحات المحتلة مع عمق ثلاثي الأبعاد سفلي خفيف
+        const extrude = Math.max(3, Math.floor(cs * 0.16));
+        for (let r = minR; r <= maxR; r++) {
+          const rowIdx = r * W;
+          const py = arenaY + r * cs;
+          for (let c = minC; c <= maxC; c++) {
+            const owner = this.grid[rowIdx + c];
+            if (owner === 0) continue;
+            const col = colorMap[owner];
+            if (!col) continue;
+            const px = arenaX + c * cs;
+
+            // حافة ثلاثية الأبعاد سفلية إذا كانت الخلية التي تحتها ليست لنفس اللاعب
+            const belowSame = (r + 1 < W) && (this.grid[(r + 1) * W + c] === owner);
+            if (!belowSame) {
+              ctx.fillStyle = col.dark;
+              ctx.fillRect(px, py + cs - 1, cs + 0.5, extrude + 1);
+            }
+            ctx.fillStyle = col.territory;
+            ctx.fillRect(px, py, cs + 0.5, cs + 0.5);
+          }
+        }
+
+        // رسم الذيول المتوهجة شبه الشفافة مع نمط خطوط مائلة مميز
+        const pulse = 0.85 + 0.15 * Math.sin(performance.now() * 0.008);
+        for (const p of this.players) {
+          if (!p.alive || p.trail.length === 0) continue;
+          const col = PALETTE[p.colorIdx];
+          ctx.save();
+          ctx.fillStyle = col.trail;
+          ctx.globalAlpha = pulse;
+          const pad = Math.max(2, cs * 0.12);
+          for (let i = 0; i < p.trail.length; i++) {
+            const pt = p.trail[i];
+            if (pt.x < minC - 1 || pt.x > maxC + 1 || pt.y < minR - 1 || pt.y > maxR + 1) continue;
+            const px = arenaX + pt.x * cs + pad;
+            const py = arenaY + pt.y * cs + pad;
+            const s = cs - pad * 2;
+            ctx.fillRect(px, py, s, s);
+            // لمسة مخططة داخلية للذيل
+            ctx.fillStyle = 'rgba(255,255,255,0.22)';
+            ctx.fillRect(px + s * 0.2, py + s * 0.2, s * 0.6, s * 0.25);
+            ctx.fillStyle = col.trail;
+          }
+          ctx.restore();
+        }
+
+        // حدود الساحة الخطرة الحمراء المتوهجة
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = Math.max(4, cs * 0.22);
+        ctx.strokeRect(arenaX - ctx.lineWidth / 2, arenaY - ctx.lineWidth / 2, arenaPx + ctx.lineWidth, arenaPx + ctx.lineWidth);
+
+        // رسم مكعبات اللاعبين بتأثير ثلاثي الأبعاد لامع وعيون تتجه لحركتهم
+        const leader = this.players.reduce((best, p) => (p.alive && (!best || p.scorePct > best.scorePct)) ? p : best, null);
+
+        for (const p of this.players) {
+          if (!p.alive) continue;
+          const col = PALETTE[p.colorIdx];
+          const gx = p.prevX + (p.x - p.prevX) * alpha;
+          const gy = p.prevY + (p.y - p.prevY) * alpha;
+          const px = arenaX + gx * cs;
+          const py = arenaY + gy * cs;
+
+          // ظل ناعم تحت المكعب
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
+          this._roundRect(ctx, px + 2, py + 5, cs - 2, cs - 2, cs * 0.24);
+          ctx.fill();
+
+          // جسم ثلاثي الأبعاد (القاعدة السفلية الداكنة)
+          ctx.fillStyle = col.dark;
+          this._roundRect(ctx, px - 1, py + 2, cs + 2, cs + 2, cs * 0.24);
+          ctx.fill();
+
+          // الوجه العلوي اللامع للمكعب
+          ctx.fillStyle = col.main;
+          this._roundRect(ctx, px - 1, py - 2, cs + 2, cs, cs * 0.24);
+          ctx.fill();
+
+          // لمعة زجاجية علوية
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+          this._roundRect(ctx, px + cs * 0.12, py, cs * 0.76, cs * 0.28, cs * 0.12);
+          ctx.fill();
+
+          // تخصيص المظهر: شخصيات بأيقونات بارزة فوق السيارة / المكعب الملون.
+          const chosen=CHARACTERS[p.characterIdx||0]||CHARACTERS[0];
+          ctx.save();ctx.font=`${Math.floor(cs*.70)}px system-ui, sans-serif`;
+          ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(chosen.emoji,px+cs*.5,py+cs*.47);ctx.restore();
+          // عيون لطيفة تشير لاتجاه الحركة (تظهر للشخصية الافتراضية فقط)
+          const d = DIRS[p.dir];
+          const eyeBaseX = px + cs * 0.5 + d.dx * cs * 0.17;
+          const eyeBaseY = py + cs * 0.44 + d.dy * cs * 0.17;
+          const perpX = d.dy !== 0 ? cs * 0.18 : 0;
+          const perpY = d.dx !== 0 ? cs * 0.18 : 0;
+          const eyeR = Math.max(2.2, cs * 0.1);
+
+          if((p.characterIdx||0)===0){
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(eyeBaseX - perpX, eyeBaseY - perpY, eyeR, 0, Math.PI * 2);
+          ctx.arc(eyeBaseX + perpX, eyeBaseY + perpY, eyeR, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(eyeBaseX - perpX + d.dx * 1.3, eyeBaseY - perpY + d.dy * 1.3, eyeR * 0.52, 0, Math.PI * 2);
+          ctx.arc(eyeBaseX + perpX + d.dx * 1.3, eyeBaseY + perpY + d.dy * 1.3, eyeR * 0.52, 0, Math.PI * 2);
+          ctx.fill();
+          }
+
+          // تاج للمتصدر الأول
+          if (leader && leader.id === p.id && p.scorePct > 1.2) {
+            ctx.font = `${Math.max(12, Math.floor(cs * 0.58))}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('👑', px + cs * 0.5, py - 5);
+          }
+
+          // اسم اللاعب أسفل المكعب بوضوح
+          if (!this.isAttractDemo) {
+            ctx.font = `800 ${Math.max(10, Math.min(13, Math.floor(cs * 0.42)))}px Cairo, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.strokeText(p.name, px + cs * 0.5, py + cs + 5);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(p.name, px + cs * 0.5, py + cs + 5);
+          }
+        }
+
+        // رسم الجزيئات المتطايرة
+        for (const pt of this.particles) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+          ctx.fillStyle = pt.color;
+          const sx = arenaX + pt.x * cs;
+          const sy = arenaY + pt.y * cs;
+          const sz = pt.size * cs;
+          ctx.fillRect(sx - sz / 2, sy - sz / 2, sz, sz);
+          ctx.restore();
+        }
+
+        // رسم نصوص "+X%" العائمة عند الاحتلال
+        for (const ft of this.floatTexts) {
+          ctx.save();
+          const a = Math.min(1, ft.life / (ft.maxLife * 0.6));
+          ctx.globalAlpha = a;
+          const sx = arenaX + ft.x * cs;
+          const sy = arenaY + ft.y * cs;
+          ctx.font = `900 ${Math.max(14, Math.floor(cs * 0.56))}px Cairo, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = ft.bg;
+          ctx.strokeText(ft.text, sx, sy);
+          ctx.fillStyle = ft.color;
+          ctx.fillText(ft.text, sx, sy);
+          ctx.restore();
+        }
+
+        // رسم الإيموجي العائمة فوق رؤوس اللاعبين
+        for (const fe of this.floatingEmojis) {
+          const p = this.getPlayer(fe.playerId);
+          if (!p || !p.alive) continue;
+          const gx = p.prevX + (p.x - p.prevX) * alpha;
+          const gy = p.prevY + (p.y - p.prevY) * alpha;
+          const progress = 1 - fe.life / fe.maxLife;
+          const sx = arenaX + (gx + 0.5) * cs;
+          const sy = arenaY + (gy - 0.8 - progress * 1.4) * cs;
+          ctx.save();
+          ctx.globalAlpha = fe.life < 0.5 ? fe.life * 2 : 1;
+          ctx.font = `${Math.max(24, Math.floor(cs * 1.05))}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(fe.emoji, sx, sy);
+          ctx.restore();
+        }
+      }
+
+      /* رسم الخريطة المصغرة (Minimap) */
+      renderMinimap(alpha) {
+        const mctx = this.miniCtx;
+        const mw = this.minimapCanvas.width;
+        const mh = this.minimapCanvas.height;
+        const W = this.gridSize;
+        const scale = mw / W;
+
+        mctx.fillStyle = '#1e293b';
+        mctx.fillRect(0, 0, mw, mh);
+
+        const colorMap = new Array(20);
+        for (const p of this.players) colorMap[p.id] = PALETTE[p.colorIdx].main;
+
+        // رسم خطوة بخطوة (سريع جداً مع 64×64)
+        const step = W > 50 ? 2 : 1;
+        const cellSz = Math.ceil(scale * step);
+        for (let y = 0; y < W; y += step) {
+          const row = y * W;
+          for (let x = 0; x < W; x += step) {
+            const owner = this.grid[row + x];
+            if (owner === 0) continue;
+            mctx.fillStyle = colorMap[owner] || '#94a3b8';
+            mctx.fillRect(x * scale, y * scale, cellSz, cellSz);
+          }
+        }
+
+        // نقاط اللاعبين
+        const pulseR = 2.6 + Math.sin(performance.now() * 0.01) * 1.1;
+        for (const p of this.players) {
+          if (!p.alive) continue;
+          const gx = p.prevX + (p.x - p.prevX) * alpha;
+          const gy = p.prevY + (p.y - p.prevY) * alpha;
+          const mx = (gx + 0.5) * scale;
+          const my = (gy + 0.5) * scale;
+
+          if (p.id === this.myPlayerId) {
+            mctx.fillStyle = '#ffffff';
+            mctx.beginPath();
+            mctx.arc(mx, my, pulseR + 1, 0, Math.PI * 2);
+            mctx.fill();
+            mctx.strokeStyle = '#0f172a';
+            mctx.lineWidth = 1.2;
+            mctx.stroke();
+          } else {
+            mctx.fillStyle = p.isHuman ? '#fde047' : PALETTE[p.colorIdx].dark;
+            mctx.beginPath();
+            mctx.arc(mx, my, p.isHuman ? 2.8 : 2, 0, Math.PI * 2);
+            mctx.fill();
+          }
+        }
+      }
+
+      _roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      }
+    }
+
+    /* =========================================================================
+       7. إدارة الغرف أونلاين وواجهة المستخدم (UI & Room Controller)
+       ========================================================================= */
+    const transport = new OnlineTransport();
+    const game = new PaperGame(
+      document.getElementById('gameCanvas'),
+      document.getElementById('minimapCanvas'),
+      transport
+    );
+
+    const uiState = {
+      selectedColor: 1, // أزرق محيطي افتراضي
+      selectedCharacter: 0,
+      difficulty: 'medium',
+      onlineTimerSec: 0,
+      inRoom: false,
+      isHost: false,
+      roomCode: null,
+      roomPlayers: [], // [{ uid, name, colorIdx, isHost, lastSeen }]
+      dpadVisible: false,
+      lastEmojiTime: 0,
+      heartbeatTimer: null
+    };
+
+    // بناء أزرار اختيار الألوان الثمانية
+    const colorPickerEl = document.getElementById('colorPicker');
+    PALETTE.forEach((c, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.title = c.name;
+      btn.className = `color-swatch w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white/25 ${idx === uiState.selectedColor ? 'selected' : ''}`;
+      btn.style.backgroundColor = c.main;
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        uiState.selectedColor = idx;
+        colorPickerEl.querySelectorAll('.color-swatch').forEach((b, i) => {
+          b.classList.toggle('selected', i === idx);
+        });
+        // تحديث اللون داخل الغرفة إذا كنا في غرفة انتظار
+        if (uiState.inRoom && !game.running) {
+          syncMyProfileInRoom();
+        }
+      });
+      colorPickerEl.appendChild(btn);
+    });
+
+    const characterPicker=document.getElementById('characterPicker');
+    CHARACTERS.forEach((ch,i)=>{
+      const button=document.createElement('button');button.type='button';button.title=ch.label;
+      button.className='character-item p-2 rounded-xl border-2 border-white/15 bg-slate-900/80 flex flex-col items-center justify-center';
+      button.innerHTML='<span style="font-size:27px">'+ch.emoji+'</span><span class="text-[10px] font-bold">'+ch.label+'</span>';
+      button.addEventListener('click',()=>{
+        uiState.selectedCharacter=i;
+        characterPicker.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('border-sky-400',k===i));
+        document.getElementById('characterSelectedLabel').textContent=ch.label;
+        if(uiState.inRoom&&game.isAttractDemo)syncMyProfileInRoom();
+      });characterPicker.appendChild(button);
+    });
+    characterPicker.firstElementChild.classList.add('border-sky-400');
+    const funnySelect=document.getElementById('funnyNameSelect'),nameInput=document.getElementById('playerNameInput');
+    funnySelect.appendChild(new Option('✍️ اكتب اسماً من اختيارك','custom'));
+    COMEDY_NAMES.forEach(n=>funnySelect.appendChild(new Option(n,n)));
+    funnySelect.addEventListener('change',()=>{if(funnySelect.value!=='custom'){nameInput.value=funnySelect.value;nameInput.dispatchEvent(new Event('change'))}else nameInput.focus()});
+    nameInput.addEventListener('input',()=>{if(funnySelect.value!=='custom'&&nameInput.value!==funnySelect.value)funnySelect.value='custom'});
+
+    // تحديث حالة الشبكة في اللوبي والـ HUD
+    transport.onStatusChange = (state, label, srv, latency) => {
+      const dot = document.getElementById('lobbyNetDot');
+      const txt = document.getElementById('lobbyNetText');
+      const hudDot = document.getElementById('hudOnlineDot');
+      const hudTxt = document.getElementById('hudOnlineText');
+
+      const dotColor = state === 'connected' ? 'bg-emerald-400'
+        : state === 'connecting' ? 'bg-amber-400 pulse-dot'
+        : state === 'error' ? 'bg-rose-500'
+        : 'bg-slate-400';
+
+      dot.className = `w-2 h-2 rounded-full ${dotColor}`;
+      txt.textContent = label;
+      hudDot.className = `w-2 h-2 rounded-full ${dotColor}`;
+      hudTxt.textContent = srv
+        ? `${srv.toUpperCase()}${latency ? ' • ' + latency + 'ms' : ''}`
+        : label;
+    };
+
+    // استقبال رسائل الشبكة (غرفة الانتظار + أثناء اللعب)
+    transport.onMessage = (msg) => {
+      if (!uiState.inRoom) return;
+
+      // رسائل المضيف (Host)
+      if (uiState.isHost) {
+        if (msg.t === 'join') {
+          let existing = uiState.roomPlayers.find(p => p.uid === msg.sid);
+          if (!existing) {
+            if (uiState.roomPlayers.length >= 4) {
+              transport.send({ t: 'full', to: msg.sid });
+              return;
+            }
+            uiState.roomPlayers.push({
+              uid: msg.sid,
+              name: (msg.n || 'صديق').slice(0, 20),
+              colorIdx: typeof msg.c === 'number' ? msg.c : 0,
+              characterIdx:Number.isInteger(msg.ch)?msg.ch:0,
+              isHost: false,
+              lastSeen: Date.now()
+            });
+            sound.playClick();
+            showToast(`انضم ${msg.n || 'صديق'} إلى الغرفة!`, 'success');
+          } else {
+            existing.name = (msg.n || existing.name).slice(0, 20);
+            existing.colorIdx = typeof msg.c === 'number' ? msg.c : existing.colorIdx;
+            existing.characterIdx=Number.isInteger(msg.ch)?msg.ch:(existing.characterIdx||0);
+            existing.lastSeen = Date.now();
+          }
+          renderRoomPlayers();
+          broadcastRoomLobby();
+        } else if (msg.t === 'hb') {
+          const pl = uiState.roomPlayers.find(p => p.uid === msg.sid);
+          if (pl) pl.lastSeen = Date.now();
+        } else if (msg.t === 'leave') {
+          const left = uiState.roomPlayers.find(p => p.uid === msg.sid);
+          uiState.roomPlayers = uiState.roomPlayers.filter(p => p.uid !== msg.sid);
+          if (left) showToast(`غادر ${left.name} الغرفة`, 'warn');
+          renderRoomPlayers();
+          broadcastRoomLobby();
+        } else if (msg.t === 'in' && game.mode === 'online_host' && !game.isAttractDemo) {
+          const gp = game.players.find(p => p.uid === msg.sid);
+          if (gp) game.queueDirection(gp.id, msg.d);
+        } else if (msg.t === 'em' && game.mode === 'online_host' && !game.isAttractDemo) {
+          const gp = game.players.find(p => p.uid === msg.sid);
+          if (gp) game.triggerEmoji(gp.id, msg.e, false);
+        } else if (msg.t === 'req_g' && game.mode === 'online_host' && !game.isAttractDemo) {
+          game.broadcastOnlineState(true);
+        }
+      } else {
+        // رسائل الضيف (Guest)
+        if (msg.t === 'lobby') {
+          uiState.roomPlayers = msg.pl || [];
+          uiState.onlineTimerSec = msg.dur || 0;
+          document.getElementById('roomMetaBadge').textContent =
+            `${msg.bots ? 'مع بوتات' : 'مواجهة مباشرة'} • ${msg.dur ? (msg.dur / 60) + ' د' : 'مفتوح'}`;
+          renderRoomPlayers();
+        } else if (msg.t === 'full' && msg.to === transport.clientId) {
+          showToast('الغرفة ممتلئة (الحد الأقصى 4 لاعبين)', 'error');
+          leaveOnlineRoom();
+        } else if (msg.t === 'start') {
+          hideModal('gameOverModal');
+          enterGameplayUI('online_guest');
+          game.startOnlineGuest(msg);
+          showToast('بدأت الجولة! بالتوفيق 🔥', 'success');
+        } else if (msg.t === 'st' && game.mode === 'online_guest' && !game.isAttractDemo) {
+          game.applyOnlineState(msg);
+        } else if (msg.t === 'host_left') {
+          showToast('أغلق المضيف الغرفة', 'warn');
+          leaveOnlineRoom();
+          returnToLobbyScreen();
+        }
+      }
+    };
+
+    function broadcastRoomLobby() {
+      if (!uiState.isHost || !uiState.inRoom) return;
+      const bots = document.getElementById('onlineBotsToggle').checked;
+      document.getElementById('roomMetaBadge').textContent =
+        `${bots ? 'مع بوتات' : 'مواجهة مباشرة'} • ${uiState.onlineTimerSec ? (uiState.onlineTimerSec / 60) + ' د' : 'مفتوح'}`;
+      transport.send({
+        t: 'lobby',
+        pl: uiState.roomPlayers.map(p => ({ uid: p.uid, name: p.name, colorIdx: p.colorIdx, characterIdx:p.characterIdx||0, isHost: p.isHost })),
+        bots,
+        dur: uiState.onlineTimerSec
+      });
+    }
+
+    function syncMyProfileInRoom() {
+      const myName = document.getElementById('playerNameInput').value.trim() || 'البطل';
+      if (uiState.isHost) {
+        const me = uiState.roomPlayers.find(p => p.uid === transport.clientId);
+        if (me) {
+          me.name = myName;
+          me.colorIdx = uiState.selectedColor;me.characterIdx=uiState.selectedCharacter;
+        }
+        renderRoomPlayers();
+        broadcastRoomLobby();
+      } else {
+        transport.send({ t: 'join', n: myName, c: uiState.selectedColor, ch:uiState.selectedCharacter });
+      }
+    }
+
+    function renderRoomPlayers() {
+      const list = document.getElementById('roomPlayersList');
+      list.innerHTML = '';
+      if (uiState.roomPlayers.length === 0) {
+        list.innerHTML = '<div class="text-xs text-slate-400 text-center py-2">جاري الاتصال بالغرفة...</div>';
+        return;
+      }
+      uiState.roomPlayers.forEach(p => {
+        const col = PALETTE[p.colorIdx] || PALETTE[0];
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold';
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background:${col.main}; box-shadow:0 0 8px ${col.main}"></span>
+            <span class="text-white">${CHARACTERS[p.characterIdx||0]?.emoji||'🥷'} ${escapeHtml(p.name)}</span>
+            ${p.isHost ? '<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/30">المضيف</span>' : ''}
+            ${p.uid === transport.clientId ? '<span class="text-[10px] text-sky-300">(أنت)</span>' : ''}
+          </div>
+          <span class="text-[11px] text-emerald-400 font-extrabold">جاهز ✓</span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[s]));
+    }
+
+    async function createOnlineRoom() {
+      sound.playClick();
+      const btn = document.getElementById('createRoomBtn');
+      btn.disabled = true;
+      const code = String(Math.floor(10000 + Math.random() * 90000));
+      const myName = document.getElementById('playerNameInput').value.trim() || 'المضيف';
+
+      const ok = await transport.connect(code);
+      btn.disabled = false;
+      if (!ok) {
+        showToast('تعذر الاتصال بالخوادم! جرّب تبديل السيرفر أو تحقق من الإنترنت.', 'error');hubNotify('playhub-error',{message:'تعذر إنشاء غرفة احتلال المساحات'});
+        return;
+      }
+
+      uiState.inRoom = true;
+      uiState.isHost = true;
+      uiState.roomCode = code;
+      uiState.roomPlayers = [{
+        uid: transport.clientId,
+        name: myName,
+        colorIdx: uiState.selectedColor,
+        characterIdx:uiState.selectedCharacter,
+        isHost: true,
+        lastSeen: Date.now()
+      }];
+
+      document.getElementById('roomCodeDisplay').textContent = code;
+      document.getElementById('onlineSetupView').classList.add('hidden');
+      document.getElementById('onlineRoomView').classList.remove('hidden');
+      document.getElementById('hostStartOnlineBtn').classList.remove('hidden');
+      document.getElementById('hostStartOnlineBtn').classList.add('flex');
+      document.getElementById('guestWaitingMsg').classList.add('hidden');
+      renderRoomPlayers();
+      broadcastRoomLobby();
+      showToast(`تم إنشاء الغرفة ${code} بنجاح! شارك الرابط المباشر.`, 'success');
+      hubNotify('playhub-room',{room:hubCode()});
+
+      startRoomHeartbeat();
+    }
+
+    async function joinOnlineRoom() {
+      sound.playClick();
+      const code = document.getElementById('joinCodeInput').value.replace(/\D/g, '').trim();
+      if (code.length !== 5) {
+        showToast('يرجى إدخال رمز غرفة صحيح مكوّن من 5 أرقام', 'warn');
+        return;
+      }
+      const btn = document.getElementById('joinRoomBtn');
+      btn.disabled = true;
+      const myName = document.getElementById('playerNameInput').value.trim() || 'صديق';
+
+      const ok = await transport.connect(code);
+      btn.disabled = false;
+      if (!ok) {
+        showToast('تعذر الاتصال بالخادم. تأكد من الإنترنت أو جرّب سيرفر ntfy.sh.', 'error');hubNotify('playhub-error',{message:'تعذر الاتصال بغرفة احتلال المساحات'});
+        return;
+      }
+
+      uiState.inRoom = true;
+      uiState.isHost = false;
+      uiState.roomCode = code;
+      uiState.roomPlayers = [];
+
+      document.getElementById('roomCodeDisplay').textContent = code;
+      document.getElementById('onlineSetupView').classList.add('hidden');
+      document.getElementById('onlineRoomView').classList.remove('hidden');
+      document.getElementById('hostStartOnlineBtn').classList.add('hidden');
+      document.getElementById('hostStartOnlineBtn').classList.remove('flex');
+      document.getElementById('guestWaitingMsg').classList.remove('hidden');
+      renderRoomPlayers();
+
+      // تأكيد الانضمام للبوابة بعد اتصال الخادم؛ جارٍ طلب تأكيد المضيف.
+      hubNotify('playhub-room',{room:hubCode()});
+      // إرسال طلب الانضمام فوراً وبشكل دوري حتى يستجيب المضيف
+      transport.send({ t: 'join', n: myName, c: uiState.selectedColor, ch:uiState.selectedCharacter });
+      startRoomHeartbeat();
+    }
+
+    function startRoomHeartbeat() {
+      if (uiState.heartbeatTimer) clearInterval(uiState.heartbeatTimer);
+      uiState.heartbeatTimer = setInterval(() => {
+        if (!uiState.inRoom || !transport.connected) return;
+        const myName = document.getElementById('playerNameInput').value.trim() || 'لاعب';
+        if (uiState.isHost) {
+          // إزالة الضيوف المنقطعين في غرفة الانتظار بعد 12 ثانية
+          if (game.isAttractDemo) {
+            const now = Date.now();
+            const before = uiState.roomPlayers.length;
+            uiState.roomPlayers = uiState.roomPlayers.filter(p => p.isHost || (now - p.lastSeen < 14000));
+            if (uiState.roomPlayers.length !== before) {
+              renderRoomPlayers();
+              broadcastRoomLobby();
+            }
+          }
+        } else {
+          if (game.isAttractDemo) {
+            // إذا لم يستلم الضيف قائمة الغرفة بعد، يكرر join
+            if (uiState.roomPlayers.length === 0) {
+              transport.send({ t: 'join', n: myName, c: uiState.selectedColor, ch:uiState.selectedCharacter });
+            } else {
+              transport.send({ t: 'hb' });
+            }
+          } else {
+            transport.send({ t: 'hb' });
+          }
+        }
+      }, 2200);
+    }
+
+    function leaveOnlineRoom() {
+      if (uiState.inRoom && transport.connected) {
+        transport.send({ t: uiState.isHost ? 'host_left' : 'leave' });
+      }
+      if (uiState.heartbeatTimer) {
+        clearInterval(uiState.heartbeatTimer);
+        uiState.heartbeatTimer = null;
+      }
+      uiState.inRoom = false;
+      uiState.isHost = false;
+      uiState.roomCode = null;
+      uiState.roomPlayers = [];
+      transport.disconnect();
+
+      document.getElementById('onlineRoomView').classList.add('hidden');
+      document.getElementById('onlineSetupView').classList.remove('hidden');
+    }
+
+    function hostStartOnlineMatch() {
+      if (!uiState.isHost || !uiState.inRoom) return;
+      sound.playClick();
+      const withBots = document.getElementById('onlineBotsToggle').checked;
+      if (uiState.roomPlayers.length < 2 && !withBots) {
+        showToast('أضف صديقاً بالغرفة أو فعّل خيار «إضافة بوتات» للبدء!', 'warn');
+        return;
+      }
+      hideModal('gameOverModal');
+      enterGameplayUI('online_host');
+      game.startOnlineHost(uiState.roomPlayers, withBots, 0);
+
+      // إرسال حزمة البداية الكاملة للضيوف
+      const startPkt = {
+        t: 'start',
+        gs: game.gridSize,
+        gv: game.gridVersion,
+        dur: game.roundDuration,
+        tl: game.timeLeft,
+        g: encodeGridRLE(game.grid),
+        p: game.players.map(p => ({
+          i: p.id, u: p.uid, n: p.name, c: p.colorIdx, ch:p.characterIdx||0, rt:p.respawnTicks||0, b: p.isBot ? 1 : 0,
+          a: p.alive ? 1 : 0, x: p.x, y: p.y, d: p.dir, k: 0, m: 0, tr: []
+        }))
+      };
+      transport.send(startPkt);
+      // إرسال نسخة تأكيد سريعة بعد 250ms تحسباً لفقدان أول حزمة
+      setTimeout(() => {
+        if (game.mode === 'online_host' && !game.isAttractDemo) {
+          game.broadcastOnlineState(true);
+        }
+      }, 250);
+    }
+
+    /* =========================================================================
+       8. تحديث الـ HUD وإشعارات القتل ونافذة نهاية الجولة
+       ========================================================================= */
+    let _lastHudUpdate = 0;
+
+    function enterGameplayUI(mode) {
+      document.getElementById('lobbyScreen').classList.add('hidden');
+      document.getElementById('hudOverlay').classList.remove('hidden');
+      document.getElementById('killFeed').innerHTML = '';
+      document.getElementById('spectatorBanner').classList.add('hidden');
+
+      const isOnline = (mode === 'online_host' || mode === 'online_guest');
+      document.getElementById('hudOnlinePill').classList.toggle('hidden', !isOnline);
+      document.getElementById('hudOnlinePill').classList.toggle('inline-flex', isOnline);
+      document.getElementById('emojiBar').classList.toggle('hidden', !isOnline);
+      document.getElementById('emojiBar').classList.toggle('flex', isOnline);
+
+      // إظهار أزرار اللمس تلقائياً أو إخفاؤها حسب تفضيل المستخدم (نبدأ بإخفائها للسحب المريح مع زر واضح للتفعيل)
+      if (mode === 'local') {
+        uiState.dpadVisible = false;
+      }
+      document.getElementById('dpadOverlay').classList.toggle('hidden', !uiState.dpadVisible);
+      document.getElementById('hudDpadToggle').classList.toggle('hidden', mode === 'local');
+    }
+
+    function returnToLobbyScreen() {
+      hideModal('gameOverModal');
+      document.getElementById('hudOverlay').classList.add('hidden');
+      document.getElementById('lobbyScreen').classList.remove('hidden');
+      game.setupAttractDemo();
+    }
+
+    function addKillFeed(text) {
+      const feed = document.getElementById('killFeed');
+      const item = document.createElement('div');
+      item.className = 'animate-pop hud-pill px-3 py-1 rounded-full text-[11px] sm:text-xs font-extrabold text-white whitespace-nowrap';
+      item.textContent = text;
+      feed.prepend(item);
+      while (feed.children.length > 2) {
+        feed.lastElementChild.remove();
+      }
+      setTimeout(() => {
+        item.style.transition = 'opacity 0.3s ease';
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 310);
+      }, 3200);
+    }
+
+    function updateHud(g) {
+      const now = performance.now();
+      if (now - _lastHudUpdate < 130) return;
+      _lastHudUpdate = now;
+
+      const me = g.getPlayer(g.myPlayerId);
+      if (me) {
+        document.getElementById('hudPercent').textContent = `${me.scorePct.toFixed(1)}%`;
+        document.getElementById('hudKills').textContent = String(me.kills);
+        const spectating = !me.alive && !g.gameOver;
+        const banner=document.getElementById('spectatorBanner');banner.classList.toggle('hidden', !spectating);if(spectating)banner.textContent='⏳ العودة خلال '+Math.ceil((me.respawnTicks||0)*g.tickMs/1000)+' ثوانٍ';
+      }
+
+      // المؤقت
+      const tWrap = document.getElementById('hudTimerWrap');
+      if (g.roundDuration > 0) {
+        tWrap.classList.remove('hidden');
+        tWrap.classList.add('flex');
+        const sec = Math.ceil(g.timeLeft);
+        const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+        const ss = String(sec % 60).padStart(2, '0');
+        document.getElementById('hudTimer').textContent = `${mm}:${ss}`;
+      } else {
+        tWrap.classList.add('hidden');
+        tWrap.classList.remove('flex');
+      }
+
+      // المتصدرون
+      const sorted = [...g.players].filter(p => p.alive).sort((a, b) => b.scorePct - a.scorePct);
+      document.getElementById('hudAliveCount').textContent = `${sorted.length} يتحرك · الهدف ${VICTORY_PERCENT}%`;
+
+      const top = sorted.slice(0, 5);
+      if (me && me.alive && !top.some(p => p.id === me.id)) {
+        top.push(me);
+      }
+
+      const lb = document.getElementById('leaderboardList');
+      let html = '';
+      top.forEach((p, idx) => {
+        const col = PALETTE[p.colorIdx] || PALETTE[0];
+        const rank = sorted.indexOf(p) + 1;
+        const isMe = p.id === g.myPlayerId;
+        html += `
+          <div class="flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded-lg ${isMe ? 'bg-white/15 text-white' : 'text-slate-200'}">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${col.main}"></span>
+              <span class="truncate">${rank === 1 ? '👑 ' : ''}${escapeHtml(p.name)}</span>
+            </div>
+            <span class="font-mono text-[10px] sm:text-xs text-sky-200 shrink-0">${p.scorePct.toFixed(1)}%</span>
+          </div>
+        `;
+      });
+      lb.innerHTML = html;
+    }
+
+    function showGameOverModal(g, reason, winnerOverride = null) {
+      const ranked = [...g.players].sort((a, b) => {
+        if (a.alive !== b.alive) return a.alive ? -1 : 1;
+        return b.scorePct - a.scorePct || b.maxPct - a.maxPct;
+      });
+      const winner = winnerOverride || ranked[0];
+      const me = g.getPlayer(g.myPlayerId);
+      const myRank = me ? ranked.findIndex(p => p.id === me.id) + 1 : 1;
+      const didWin = winner && me && winner.id === me.id && (reason !== 'eliminated' || g.mode === 'local');
+
+      if (didWin || (g.mode === 'local' && winner)) {
+        sound.playVictory();
+      }
+
+      document.getElementById('goIcon').textContent = didWin ? '🏆' : (g.mode === 'local' ? '⚔️' : '💥');
+      if (g.mode === 'local') {
+        document.getElementById('goTitle').textContent = winner ? `فاز ${winner.name}!` : 'تعادل مثير!';
+        document.getElementById('goSubtitle').textContent = 'نهاية التحدي الثنائي المحلي';
+      } else if (didWin) {
+        document.getElementById('goTitle').textContent = 'انتصار ساحق! 👑';
+        document.getElementById('goSubtitle').textContent = reason === 'time'
+          ? 'انتهى الوقت وأنت صاحب أكبر مساحة!'
+          : 'سيطرت على الساحة وهزمت منافسيك!';
+      } else {
+        document.getElementById('goTitle').textContent = reason === 'time' ? 'انتهى الوقت!' : 'تم إقصاؤك!';
+        document.getElementById('goSubtitle').textContent = winner && winner.id !== (me && me.id)
+          ? `المتصدر: ${winner.name} (${winner.scorePct.toFixed(1)}%)`
+          : 'حاول مجدداً وتوسّع بذكاء أكبر!';
+      }
+
+      document.getElementById('goRank').textContent = `#${myRank}`;
+      document.getElementById('goMaxPct').textContent = `${(me ? me.maxPct : 0).toFixed(1)}%`;
+      document.getElementById('goKills').textContent = String(me ? me.kills : 0);
+
+      const list = document.getElementById('goRankingList');
+      list.innerHTML = ranked.slice(0, 6).map((p, i) => {
+        const col = PALETTE[p.colorIdx] || PALETTE[0];
+        return `
+          <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl ${p.id === g.myPlayerId ? 'bg-sky-500/20 border border-sky-400/30' : 'bg-slate-800/60'}">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-black text-amber-300 w-5">#${i + 1}</span>
+              <span class="w-3 h-3 rounded-full shrink-0" style="background:${col.main}"></span>
+              <span class="font-bold text-white truncate">${escapeHtml(p.name)}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs font-bold shrink-0">
+              <span class="text-amber-300">⚔️ ${p.kills}</span>
+              <span class="text-emerald-300 font-mono">${p.maxPct.toFixed(1)}%</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // ضبط أزرار إعادة الجولة للضيف مقابل المضيف/الفردي
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      const guestWait = document.getElementById('guestRematchWait');
+      if (g.mode === 'online_guest') {
+        playAgainBtn.classList.add('hidden');
+        guestWait.classList.remove('hidden');
+      } else {
+        playAgainBtn.classList.remove('hidden');
+        guestWait.classList.add('hidden');
+      }
+
+      const modal = document.getElementById('gameOverModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function hideModal(id) {
+      const m = document.getElementById(id);
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    /* =========================================================================
+       9. التحكم الكامل: الكيبورد + السحب باللمس السريع + أزرار الـ D-Pad
+       ========================================================================= */
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+      if (!game.running || game.isAttractDemo || game.gameOver) return;
+
+      const key = e.key.toLowerCase();
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+        e.preventDefault();
+      }
+
+      if (game.mode === 'local') {
+        // اللاعب 1: WASD
+        if (key === 'w') game.queueDirection(game.myPlayerId, 0);
+        else if (key === 'd') game.queueDirection(game.myPlayerId, 1);
+        else if (key === 's') game.queueDirection(game.myPlayerId, 2);
+        else if (key === 'a') game.queueDirection(game.myPlayerId, 3);
+        // اللاعب 2: الأسهم
+        else if (key === 'arrowup') game.queueDirection(game.localP2Id, 0);
+        else if (key === 'arrowright') game.queueDirection(game.localP2Id, 1);
+        else if (key === 'arrowdown') game.queueDirection(game.localP2Id, 2);
+        else if (key === 'arrowleft') game.queueDirection(game.localP2Id, 3);
+      } else {
+        if (key === 'arrowup' || key === 'w') game.queueDirection(game.myPlayerId, 0);
+        else if (key === 'arrowright' || key === 'd') game.queueDirection(game.myPlayerId, 1);
+        else if (key === 'arrowdown' || key === 's') game.queueDirection(game.myPlayerId, 2);
+        else if (key === 'arrowleft' || key === 'a') game.queueDirection(game.myPlayerId, 3);
+      }
+    });
+
+    // السحب السلس باللمس في أي مكان على القماش مع عتبة منخفضة (18px) ودعم الانعطاف المستمر
+    let swipeAnchorX = null;
+    let swipeAnchorY = null;
+    const SWIPE_THRESHOLD = 18;
+    const canvasEl = document.getElementById('gameCanvas');
+
+    canvasEl.addEventListener('touchstart', (e) => {
+      if (game.isAttractDemo || game.mode === 'local') return;
+      sound.unlock();
+      if (e.touches.length > 0) {
+        swipeAnchorX = e.touches[0].clientX;
+        swipeAnchorY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    canvasEl.addEventListener('touchmove', (e) => {
+      if (swipeAnchorX === null || game.isAttractDemo || game.mode === 'local') return;
+      if (e.touches.length === 0) return;
+      const dx = e.touches[0].clientX - swipeAnchorX;
+      const dy = e.touches[0].clientY - swipeAnchorY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      if (Math.max(absX, absY) >= SWIPE_THRESHOLD) {
+        if (absX > absY) {
+          game.queueDirection(game.myPlayerId, dx > 0 ? 1 : 3);
+        } else {
+          game.queueDirection(game.myPlayerId, dy > 0 ? 2 : 0);
+        }
+        // إعادة ضبط نقطة الارتكاز لتسهيل الانعطافات السريعة المتتالية دون رفع الإصبع
+        swipeAnchorX = e.touches[0].clientX;
+        swipeAnchorY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    canvasEl.addEventListener('touchend', () => {
+      swipeAnchorX = null;
+      swipeAnchorY = null;
+    }, { passive: true });
+
+    // أزرار الـ D-Pad على الشاشة (استجابة فورية باللمس أو الماوس)
+    document.querySelectorAll('.dpad-btn').forEach(btn => {
+      const dir = parseInt(btn.dataset.dir, 10);
+      const handlePress = (e) => {
+        e.preventDefault();
+        sound.unlock();
+        btn.classList.add('pressed');
+        game.queueDirection(game.myPlayerId, dir);
+      };
+      const handleRelease = () => btn.classList.remove('pressed');
+
+      btn.addEventListener('pointerdown', handlePress);
+      btn.addEventListener('pointerup', handleRelease);
+      btn.addEventListener('pointerleave', handleRelease);
+      btn.addEventListener('pointercancel', handleRelease);
+    });
+
+    /* =========================================================================
+       10. ربط أحداث أزرار الواجهة واللوبي
+       ========================================================================= */
+    // تبديل تبويبات أوضاع اللعب
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        sound.playClick();
+        const m = tab.dataset.mode;
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t === tab));
+        document.getElementById('panelSolo').classList.toggle('hidden', m !== 'solo');
+        document.getElementById('panelOnline').classList.toggle('hidden', m !== 'online');
+        document.getElementById('panelLocal').classList.toggle('hidden', m !== 'local');
+      });
+    });
+
+    // اختيار مستوى الصعوبة
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        uiState.difficulty = btn.dataset.diff;
+        document.querySelectorAll('.diff-btn').forEach(b => {
+          const active = b === btn;
+          b.className = active
+            ? 'diff-btn py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/25 border-2 border-sky-400 text-white transition'
+            : 'diff-btn py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900/80 border border-white/10 text-slate-300 transition';
+        });
+      });
+    });
+
+    // اختيار السيرفر أونلاين
+    document.querySelectorAll('.srv-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        transport.setPreferredServer(btn.dataset.srv);
+        document.querySelectorAll('.srv-btn').forEach(b => {
+          const active = b === btn;
+          b.className = active
+            ? 'srv-btn py-1.5 px-1 rounded-xl text-[11px] font-extrabold bg-sky-500/25 border border-sky-400 text-sky-200 transition'
+            : 'srv-btn py-1.5 px-1 rounded-xl text-[11px] font-bold bg-slate-900/70 border border-white/10 text-slate-300 transition';
+        });
+      });
+    });
+
+    // اختيار مدة الجولة أونلاين
+    document.querySelectorAll('.otimer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        uiState.onlineTimerSec = parseInt(btn.dataset.sec, 10);
+        document.querySelectorAll('.otimer-btn').forEach(b => {
+          const active = b === btn;
+          b.className = active
+            ? 'otimer-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-500/25 border border-sky-400 text-white'
+            : 'otimer-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900/80 border border-white/10 text-slate-300';
+        });
+      });
+    });
+
+    // زر تشغيل/كتم الصوت
+    document.getElementById('lobbySoundBtn').addEventListener('click', () => sound.toggleMute());
+    document.getElementById('hudSoundBtn').addEventListener('click', () => sound.toggleMute());
+
+    // زر إظهار/إخفاء أزرار اللمس D-Pad
+    document.getElementById('hudDpadToggle').addEventListener('click', () => {
+      sound.playClick();
+      uiState.dpadVisible = !uiState.dpadVisible;
+      document.getElementById('dpadOverlay').classList.toggle('hidden', !uiState.dpadVisible);
+    });
+
+    // بدء اللعب الفردي
+    document.getElementById('startSoloBtn').addEventListener('click', () => {
+      sound.unlock();
+      sound.playClick();
+      const name = document.getElementById('playerNameInput').value.trim() || 'البطل';
+      if (isTouchDevice()) uiState.dpadVisible = false;
+      enterGameplayUI('solo');
+      game.startSolo(name, uiState.selectedColor, uiState.difficulty);
+    });
+
+    // بدء اللعب المحلي لشخصين
+    document.getElementById('startLocalBtn').addEventListener('click', () => {
+      sound.unlock();
+      sound.playClick();
+      const p1 = document.getElementById('localP1Name').value.trim() || 'اللاعب 1';
+      const p2 = document.getElementById('localP2Name').value.trim() || 'اللاعب 2';
+      const withBots = document.getElementById('localBotsToggle').checked;
+      enterGameplayUI('local');
+      game.startLocal(p1, 1, p2, 0, withBots);
+    });
+
+    // أزرار الغرفة أونلاين
+    document.getElementById('createRoomBtn').addEventListener('click', createOnlineRoom);
+    document.getElementById('joinRoomBtn').addEventListener('click', joinOnlineRoom);
+    document.getElementById('leaveRoomBtn').addEventListener('click', () => {
+      sound.playClick();
+      leaveOnlineRoom();
+    });
+    document.getElementById('hostStartOnlineBtn').addEventListener('click', hostStartOnlineMatch);
+
+    document.getElementById('copyRoomCodeBtn').addEventListener('click', () => {
+      sound.playClick();
+      if (!uiState.roomCode) return;
+      const ok = copyTextSafe(uiState.roomCode);
+      showToast(ok ? `تم نسخ رمز الغرفة: ${uiState.roomCode}` : `رمز الغرفة هو: ${uiState.roomCode}`, 'success');
+    });
+
+    // شريط الإيموجي السريع
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const now = performance.now();
+        if (now - uiState.lastEmojiTime < 1200) return;
+        uiState.lastEmojiTime = now;
+        sound.playClick();
+        game.triggerEmoji(game.myPlayerId, btn.dataset.emoji, false);
+      });
+    });
+
+    // أزرار الخروج وإعادة الجولة
+    document.getElementById('hudExitBtn').addEventListener('click', () => {
+      sound.playClick();
+      if (game.mode === 'online_host' || game.mode === 'online_guest') {
+        leaveOnlineRoom();
+      }
+      returnToLobbyScreen();
+    });
+
+    document.getElementById('playAgainBtn').addEventListener('click', () => {
+      sound.playClick();
+      hideModal('gameOverModal');
+      if (game.mode === 'solo') {
+        const name = document.getElementById('playerNameInput').value.trim() || 'البطل';
+        game.startSolo(name, uiState.selectedColor, uiState.difficulty);
+      } else if (game.mode === 'local') {
+        const p1 = document.getElementById('localP1Name').value.trim() || 'اللاعب 1';
+        const p2 = document.getElementById('localP2Name').value.trim() || 'اللاعب 2';
+        const withBots = document.getElementById('localBotsToggle').checked;
+        game.startLocal(p1, 1, p2, 0, withBots);
+      } else if (game.mode === 'online_host') {
+        hostStartOnlineMatch();
+      }
+    });
+
+    document.getElementById('backToLobbyBtn').addEventListener('click', () => {
+      sound.playClick();
+      if (game.mode === 'online_host' || game.mode === 'online_guest') {
+        leaveOnlineRoom();
+      }
+      returnToLobbyScreen();
+    });
+
+    // تحديث اسم اللاعب تلقائياً داخل غرفة الانتظار عند التعديل
+    document.getElementById('playerNameInput').addEventListener('change', () => {
+      if (uiState.inRoom && game.isAttractDemo) syncMyProfileInRoom();
+    });
+
+    // تكامل مباشر مع PlayHub: غرفة واحدة ورابط واحد بلا طلب انضمام ثانٍ.
+    let hubSessionId='',hubSessionAction='';
+    function hubNotify(type,payload={}){
+      if(window.parent!==window)window.parent.postMessage({type,game:'paper',session:hubSessionId,...payload},'*');
+    }
+    function hubServerPrefix(){return ({emqx:'1',hivemq:'2',ntfy:'3'})[transport.activeServer]||'1'}
+    function hubCode(){return hubServerPrefix()+'-'+uiState.roomCode}
+    function hubOpenOnlineTab(){
+      document.querySelector('[data-mode="online"]').click();
+    }
+    async function hubCreate(settings={}){
+      hubOpenOnlineTab();
+      const b=settings.serverChoice;
+      transport.setPreferredServer(b==='1'?'emqx':b==='2'?'hivemq':b==='3'?'ntfy':'auto');
+      await createOnlineRoom();
+    }
+    async function hubJoin(code){
+      const match=/^([123])-(\d{5})$/.exec(String(code||''));
+      if(!match){hubNotify('playhub-error',{message:'رابط احتلال المساحات غير صحيح'});return}
+      hubOpenOnlineTab();
+      transport.setPreferredServer(({1:'emqx',2:'hivemq',3:'ntfy'})[match[1]]);
+      document.getElementById('joinCodeInput').value=match[2];
+      await joinOnlineRoom();
+    }
+    function hubApplySession(m){
+      if(!m||m.type!=='playhub-session'||m.game!=='paper')return;
+      if(m.session===hubSessionId&&hubSessionAction)return;
+      hubSessionId=m.session||'',hubSessionAction=m.action||'';
+      if(m.action==='create')hubCreate(m);
+      else if(m.action==='join')hubJoin(m.room);
+    }
+    window.addEventListener('message',e=>{
+      if(e.source!==window.parent)return;
+      if(e.data?.type==='playhub-ping'){hubNotify('playhub-ready');return}
+      hubApplySession(e.data);
+    });
+    const bootQuery=new URLSearchParams(location.search);
+    if(window.parent===window&&bootQuery.get('room')){
+      hubJoin(bootQuery.get('room'));
+    }
+    hubNotify('playhub-ready');
+
+    /* =========================================================================
+       11. تشغيل حلقة الرسم الرئيسية بعد اكتمال تحميل الصفحة
+       ========================================================================= */
+    function mainLoop(timestamp) {
+      if (!game.lastFrameTime) game.lastFrameTime = timestamp;
+      const dt = (timestamp - game.lastFrameTime) / 1000;
+      game.lastFrameTime = timestamp;
+
+      game.update(dt);
+      requestAnimationFrame(mainLoop);
+    }
+
+    window.onload = function () {
+      game.resize();
+      requestAnimationFrame(mainLoop);
+    };
+  })();
+  </script>
+</body>
+</html>
