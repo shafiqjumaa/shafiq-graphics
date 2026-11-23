@@ -1,5 +1,7 @@
 package com.shafiq.playhub;
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
+import android.webkit.WebResourceError;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -17,6 +19,8 @@ import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 
 public final class MainActivity extends Activity {
+  private static final String LIVE_URL="https://shafiqjumaa.github.io/shafiq-graphics/playhub/";
+  private boolean offlineFallback=false;
   private WebView webView;
   private FrameLayout root;
   private View customView;
@@ -45,7 +49,16 @@ public final class MainActivity extends Activity {
         return loader.shouldInterceptRequest(req.getUrl());
       }
       @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest req) {
-        return !"appassets.androidplatform.net".equals(req.getUrl().getHost());
+        String host=req.getUrl().getHost();
+        if("appassets.androidplatform.net".equals(host)||"shafiqjumaa.github.io".equals(host))return false;
+        try{startActivity(new Intent(Intent.ACTION_VIEW,req.getUrl()));}catch(Exception ignored){}
+        return true;
+      }
+      @Override public void onReceivedError(WebView v,WebResourceRequest req,WebResourceError error){
+        if(req.isForMainFrame()&&!offlineFallback){
+          offlineFallback=true;
+          v.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+        }
       }
     });
     webView.setWebChromeClient(new WebChromeClient() {
@@ -57,7 +70,7 @@ public final class MainActivity extends Activity {
       }
       @Override public void onHideCustomView(){hideCustom();}
     });
-    webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+    webView.loadUrl(LIVE_URL+"?apk=1&cache="+System.currentTimeMillis());
   }
   private void hideCustom() {
     if(customView==null)return;
@@ -66,6 +79,10 @@ public final class MainActivity extends Activity {
     if(customCallback!=null){customCallback.onCustomViewHidden();customCallback=null;}
   }
   private final class Bridge {
+    @JavascriptInterface public void setLandscape(boolean enabled) {
+      runOnUiThread(()->setRequestedOrientation(enabled?
+          ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE:ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
+    }
     @JavascriptInterface public void copyText(String s) {
       runOnUiThread(()->((ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE))
         .setPrimaryClip(ClipData.newPlainText("PlayHub",s)));
