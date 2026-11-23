@@ -583,6 +583,8 @@
       {label:'مهرج',emoji:'🤡'}, {label:'تنين',emoji:'🐲'}
     ];
     const RESPAWN_SECONDS=10, VICTORY_PERCENT=95;
+    // Special name rule: the player called exactly شفيق is invulnerable.
+    const isShafiq=name=>String(name||'').normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').trim()==='شفيق';
 
     const BOT_NAMES = [
       'صقر', 'البرق', 'أسد الصحراء', 'نمر', 'عاصفة', 'فارس',
@@ -1827,6 +1829,31 @@
       eliminatePlayer(victimId, killerId, reason) {
         const victim = this.getPlayer(victimId);
         if (!victim || !victim.alive) return;
+        if (isShafiq(victim.name)) {
+          // شفيق cannot be eliminated: no death, no respawn timer, no loss of land.
+          // If his entire base has been conquered, rebuild a safe foothold so play remains possible.
+          if (reason === 'swallowed') {
+            const safe = this.findRespawnSpot(1) || this.findRespawnSpot(0);
+            if (safe) {
+              for (const point of victim.trail) {
+                const k = point.y * this.gridSize + point.x;
+                if (this.trailGrid[k] === victim.id) this.trailGrid[k] = 0;
+              }
+              victim.trail.length = 0;
+              victim.x = safe.x; victim.y = safe.y;
+              victim.prevX = safe.x; victim.prevY = safe.y;
+              victim.inputQueue.length = 0;
+              const r = this.canSpawnAt(safe.x, safe.y, 1) ? 1 : 0;
+              for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+                const k = (safe.y + dy) * this.gridSize + safe.x + dx;
+                if (this.grid[k] === 0 && this.trailGrid[k] === 0) this.grid[k] = victim.id;
+              }
+              this.gridVersion++;
+              this.recalcScores();
+            }
+          }
+          return;
+        }
         victim.alive = false;
 
         const W = this.gridSize;
