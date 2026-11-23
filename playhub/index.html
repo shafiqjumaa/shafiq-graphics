@@ -141,7 +141,7 @@ body.race-landscape .game-frame{height:calc(100dvh - 35px)}
     const parseGameInvite=value=>{
       try{
         const raw=String(value||'').trim(),u=new URL(raw),base=getBase();
-        if(!base||u.origin!==base.origin||u.pathname.replace(/\\/+$/,'/')!==base.pathname.replace(/\\/+$/,'/'))return null;
+        if(!base||u.origin!==base.origin||u.pathname.replace(/\/+$/,'/')!==base.pathname.replace(/\/+$/,'/'))return null;
         const game=safeId(u.searchParams.get('game')),room=validateCode(u.searchParams.get('room'));
         return game&&room?{game,room}:null;
       }catch{return null}
