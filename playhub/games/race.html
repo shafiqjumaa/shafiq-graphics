@@ -13,7 +13,7 @@
 #hud{position:fixed;z-index:5;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:start;justify-content:space-between;gap:9px;pointer-events:none}#hud>div{pointer-events:auto}.hudstats{padding:9px 14px;min-width:142px}.eyebrow{color:var(--teal);font-size:9px;letter-spacing:1.5px;font-weight:900}.big{font-size:26px;font-weight:950;line-height:1.14;font-variant-numeric:tabular-nums}.unit{font-size:10px;color:#a8c6cb}.hud-right{display:flex;gap:7px;align-items:flex-start}.pill{padding:9px 12px;font-size:11px;font-weight:800;text-align:center}.pill b{color:var(--gold);font-size:14px;display:block}.pill strong{display:block;color:var(--teal);font-size:14px}.iconbtn{width:37px;height:37px;border:1px solid #4e8397aa;background:#12313fbf;color:#e0feff;border-radius:12px;font-size:18px}
 #mini{position:fixed;z-index:5;top:104px;left:12px;width:122px;height:122px;padding:6px;background:#081725c8;border:1px solid #4b879988;border-radius:14px;pointer-events:none}
 #raceBanner{position:fixed;inset:30% 0 auto;text-align:center;z-index:10;font-size:clamp(48px,14vw,94px);font-weight:1000;text-shadow:0 7px 30px #000b,0 0 25px #48ddd3;pointer-events:none;letter-spacing:2px}.count{color:var(--gold)}
-#controls{position:fixed;z-index:8;left:12px;right:12px;bottom:max(18px,env(safe-area-inset-bottom));display:none;justify-content:space-between;gap:12px;pointer-events:none;direction:ltr}.driveGroup{display:flex;gap:12px;align-items:end;pointer-events:auto}.driveBtn{min-width:64px;height:71px;display:grid;place-items:center;border:1px solid #b4e2e45c;border-radius:20px;background:linear-gradient(145deg,#194358dd,#092332df);color:#eff;box-shadow:0 8px 23px #0006;font-size:26px;font-weight:900;touch-action:none}.driveBtn:active,.driveBtn.pressed{background:#2b8e91dd;transform:scale(.95)}.driveBtn.accel{height:89px;background:linear-gradient(145deg,#20ab91df,#105c65dd);font-size:15px}.driveBtn.nitro{height:68px;min-width:65px;border-color:#f3cc8f91;color:#fbe4b7;font-size:15px}
+#controls{position:fixed;z-index:8;left:12px;right:12px;bottom:max(18px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;gap:12px;pointer-events:none;direction:ltr}.driveGroup{display:flex;gap:12px;align-items:end;pointer-events:auto}.driveBtn{min-width:64px;height:71px;display:grid;place-items:center;border:1px solid #b4e2e45c;border-radius:20px;background:linear-gradient(145deg,#194358dd,#092332df);color:#eff;box-shadow:0 8px 23px #0006;font-size:26px;font-weight:900;touch-action:none}.driveBtn:active,.driveBtn.pressed{background:#2b8e91dd;transform:scale(.95)}.driveBtn.accel{height:89px;background:linear-gradient(145deg,#20ab91df,#105c65dd);font-size:15px}.driveBtn.nitro{height:68px;min-width:65px;border-color:#f3cc8f91;color:#fbe4b7;font-size:15px}
 #centerPanel{position:fixed;z-index:12;top:50%;left:50%;transform:translate(-50%,-50%);width:min(92vw,530px);max-height:calc(100dvh - 38px);overflow-y:auto;padding:27px 25px;text-align:center;touch-action:pan-y}
 #centerPanel.hidden,#hud.hidden,#mini.hidden,#controls.hidden,#raceBanner.hidden,#toast.hidden,#impactMessage.hidden{display:none!important}
 h1{font-size:clamp(29px,7vw,45px);line-height:1.2;margin:6px 0 9px;font-weight:1000;letter-spacing:-1.2px}.muted{color:#9cbec7;font-size:13px;line-height:1.8}label{display:block;text-align:right;font-size:11px;color:#b5d3dc;font-weight:850;margin:17px 0 8px}.select{border:1px solid #416b7b;background:#102838;color:#f2ffff;width:100%;height:45px;border-radius:12px;padding:9px 14px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cta{width:100%;padding:13px 17px;border-radius:14px;background:linear-gradient(135deg,#65f1d2,#29a9b1);color:#052b30;font-weight:950;margin-top:12px}.cta.alt{background:#1a3445;color:#daffff;border:1px solid #3a6676}.cta:active{transform:scale(.985)}.roomLink{font-size:11px;direction:ltr;overflow-wrap:anywhere;background:#061622;border:1px solid #3e6572;border-radius:10px;padding:12px;display:block;user-select:text;color:#bbffff}.roster{margin:13px 0 6px;display:grid;gap:7px;text-align:right}.rosterLine{display:flex;align-items:center;gap:9px;padding:9px 11px;background:#0f2b39;border-radius:10px;font-size:12px}.rosterColor{width:12px;height:12px;border-radius:4px;display:inline-block}.small{font-size:11px;color:#8db3bb}#toast{position:fixed;z-index:25;left:50%;bottom:121px;transform:translateX(-50%);width:max-content;max-width:90vw;background:#113341;padding:12px 15px;border-radius:12px;border:1px solid #5bcfc3;color:white;box-shadow:0 16px 40px #0009;font-size:12px}.progress{height:8px;background:#203a49;border-radius:99px;overflow:hidden;margin-top:7px}.progress>div{width:100%;height:100%;background:linear-gradient(90deg,#3d94c8,#57e8d3);border-radius:99px}.lobby-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.lobby-top span{font-size:11px;color:#71e1d2}
@@ -30,6 +30,18 @@ h1{font-size:clamp(29px,7vw,45px);line-height:1.2;margin:6px 0 9px;font-weight:1
 #garagePaint{height:45px;width:100%;border:1px solid #416b7b;border-radius:12px;background:#102838;padding:5px;cursor:pointer}
 #readyStatus{font-size:10px;color:#7bdacb;padding-top:6px}
 @media(max-width:450px){.garageGrid{gap:7px}}
+
+#controls:not(.hidden){display:flex!important}
+.driveBtn{touch-action:none;user-select:none;-webkit-touch-callout:none;position:relative;z-index:9}
+@media(pointer:coarse){.driveBtn{min-width:clamp(62px,10vw,85px);height:clamp(62px,15vh,86px);font-size:27px;border:2px solid #9ee8dc;background:#103749ee}.driveBtn.accel{height:clamp(72px,17vh,94px);background:#0b8c81ee}.driveBtn.nitro{min-width:58px;height:clamp(58px,13vh,78px)}#controls{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(9px,env(safe-area-inset-bottom))}}
+@media(orientation:landscape) and (max-height:510px){#hud{top:5px}.hudstats{padding:4px 8px}.big{font-size:18px}#mini{top:61px;width:76px;height:76px}#controls{bottom:8px}.driveBtn{min-width:61px;height:58px}.driveBtn.accel{height:67px}.driveBtn.nitro{height:58px}.hud-right .pill{padding:4px 7px}}
+#rotateOverlay{display:none;position:fixed;inset:0;z-index:40;background:#071a26f5;align-items:center;justify-content:center;text-align:center;padding:18px;flex-direction:column;gap:14px}
+#rotateOverlay b{font-size:19px}#rotateOverlay .rotateIcon{font-size:52px}#rotateOverlay button{border:1px solid #6cebd9;border-radius:12px;background:#106f70;color:white;padding:12px 20px;font-weight:900}
+@media(orientation:portrait) and (pointer:coarse){body.race-in-progress #rotateOverlay{display:flex}}
+.serverTools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0}.serverList{display:grid;gap:8px;text-align:right;max-height:42vh;overflow-y:auto;touch-action:pan-y}
+.serverRow{display:flex;justify-content:space-between;align-items:center;gap:9px;background:#103140;border:1px solid #407b87;border-radius:12px;padding:12px}.serverRow strong{font-size:13px}.serverRow small{font-size:11px;color:#abccd3}.serverRow button{padding:9px 13px;background:#38d4c4;border-radius:10px;color:#09242a;font-weight:900}
+.serverBadge{display:inline-block;color:#7cebd8;font-size:10px;margin-top:4px}.serverEmpty{border:1px dashed #477c89;border-radius:13px;padding:22px 12px;color:#adcbd0;text-align:center;font-size:12px}
+.toggleLine{display:flex;gap:8px;align-items:center;margin:13px 0;color:#a7d9d3;font-size:12px}.toggleLine input{width:17px;height:17px;accent-color:#38d6be}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js"}}</script>
 </head>
@@ -38,10 +50,19 @@ h1{font-size:clamp(29px,7vw,45px);line-height:1.2;margin:6px 0 9px;font-weight:1
 <div id="hud" class="hidden"><div class="glass hudstats"><span class="eyebrow" id="hudMap">SHIFT RACING</span><div><span id="speed" class="big">000</span> <span class="unit">KM/H</span></div><div class="unit">نيترو <span id="nitroNum">100%</span><div class="progress"><div id="nitroBar"></div></div></div></div><div class="hud-right"><div class="glass pill">اللفة<b id="lap">1 / 3</b></div><div class="glass pill">الترتيب<strong id="place">1 / 1</strong></div><div class="glass pill">الوقت<strong id="time">0:00</strong></div><button id="recoverBtn" class="iconbtn" title="إعادة السيارة إلى الطريق" aria-label="إعادة السيارة إلى الطريق">↺</button><button id="pauseBtn" class="iconbtn" title="إيقاف مؤقت">Ⅱ</button></div></div>
 <canvas id="mini" class="hidden" width="244" height="244"></canvas><div id="impactMessage" class="hidden">⚠️ اصطدام! خفف السرعة</div><div id="raceBanner" class="hidden" aria-live="polite"></div>
 <div id="controls" class="hidden"><div class="driveGroup"><button class="driveBtn" id="left" aria-label="يسار">◀</button><button class="driveBtn" id="right" aria-label="يمين">▶</button></div><div class="driveGroup"><button class="driveBtn nitro" id="nitro" aria-label="نيترو">NITRO</button><button class="driveBtn" id="brake" aria-label="فرامل">▾</button><button class="driveBtn accel" id="gas" aria-label="تسارع">GAS ▲</button></div></div>
-<div id="centerPanel" class="glass"><div id="panelContent"></div></div><div id="toast" class="hidden" role="status"></div>
+<div id="rotateOverlay"><div class="rotateIcon">📱↻</div><b>دوّر الهاتف للوضع الأفقي</b><span>سيتم إظهار عناصر القيادة بالكامل.</span><button id="tryRotate">تفعيل وضع العرض</button></div><div id="centerPanel" class="glass"><div id="panelContent"></div></div><div id="toast" class="hidden" role="status"></div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js" defer onerror="(function(){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js';document.head.appendChild(s)})()"></script>
 <script type="module">
 const $=id=>document.getElementById(id), fromHub=()=>window.parent!==window;
+function setDrivingOrientation(enabled){
+ document.body.classList.toggle('race-in-progress',!!enabled);
+ if(fromHub())try{window.parent.postMessage({type:'playhub-orientation',game:'race',landscape:!!enabled},'*')}catch(e){}
+ else if(window.Android&&typeof Android.setLandscape==='function')try{Android.setLandscape(!!enabled)}catch(e){}
+ else if(enabled)try{screen.orientation?.lock?.('landscape').catch(()=>{})}catch(e){}
+ else try{screen.orientation?.unlock?.()}catch(e){}
+}
+$('tryRotate').onclick=async()=>{try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){}try{await screen.orientation?.lock?.('landscape')}catch(e){notify('دوّر جوالك يدوياً؛ تطبيق Android يدعم التدوير التلقائي.')}};
+
 const mapDefs={city:{name:'المدينة الليلية',sky:0x0e2137,fog:0x173347,ground:0x193849,road:0x303f4c,edge:0x67e4dc,prop:'city',width:14,rx:96,rz:81},coast:{name:'الساحل',sky:0x66c3d9,fog:0x8bdbe8,ground:0xcea968,road:0x46525b,edge:0xe8d8aa,prop:'coast',width:15,rx:106,rz:85},desert:{name:'الصحراء',sky:0xdba76c,fog:0xe5bb8d,ground:0xc7a06d,road:0x514943,edge:0xf4d5a1,prop:'desert',width:16,rx:113,rz:88},mountain:{name:'الجبال',sky:0x759cbb,fog:0xa1b7c8,ground:0x3f795c,road:0x454e53,edge:0xcee2d9,prop:'mountain',width:13,rx:96,rz:105},straight:{name:'المسار المستقيم • تحدّي العوائق',sky:0x93c5da,fog:0xc3ddeb,ground:0x51765a,road:0x303b46,edge:0xf1c45f,prop:'straight',width:24,rx:0,rz:440},kenney:{name:'حلبة كيني الجاهزة • CC0',sky:0x89b9d4,fog:0xa4c3d3,ground:0x3e745a,road:0x333941,edge:0xedcf95,prop:'mountain',width:18,rx:60,rz:75}};
 const modes={solo:{label:'تجربة فردية',max:1},duo:{label:'لاعبان',max:2},trio:{label:'3 لاعبين',max:3},quad:{label:'4 لاعبين',max:4},team:{label:'2 ضد 2',max:4}};
 const colors=[0x31e6d2,0xffaa4f,0xb796ff,0xff6488];
@@ -55,7 +76,7 @@ function randomRoom(){return '1-'+String(100000+Math.floor(Math.random()*900000)
 // Each opened invite gets a distinct player identity, even in duplicated tabs.
 const id=randomToken(16);
 const me={id,name:'متسابق '+id.slice(0,4),slot:0,team:0,...savedGarage()};
-let cfg={map:'city',mode:'solo',laps:3},room='',host='',role='solo',phase='menu',roster=[],client=null,connected=false,topic='',sessionId='',lastRosterAt=0,heartbeat=0,lastSend=0,startAt=0,lastOnlineAt=0,finished={},raceEndAt=0,disconnectTimer=0,fullSince=0,rosterRevision=0,lastSeenRevision=-1;
+let cfg={map:'city',mode:'solo',laps:3,publicRoom:true},room='',host='',role='solo',phase='menu',roster=[],client=null,connected=false,topic='',sessionId='',lastRosterAt=0,heartbeat=0,lastSend=0,startAt=0,lastOnlineAt=0,finished={},raceEndAt=0,disconnectTimer=0,fullSince=0,rosterRevision=0,lastSeenRevision=-1;
 let lastBumpAt=-9999;
 let THREE=null,scene=null,renderer=null,camera=null,track=null,terrain=null,car3d=null,remoteCars=new Map(),obstacles=[],anim=0,lastTick=0,gameTime=0,renderReady=false,sceneBuildVersion=0,impactShownAt=-9999,roadFallbackMaterials=null;
 const k={left:false,right:false,gas:false,brake:false,nitro:false},motion={x:0,z:0,heading:0,speed:0,steering:0,nitro:100,t:0,lap:1,lastIndex:0,checkpoints:0,completed:false,finishTime:0};
@@ -65,7 +86,7 @@ function notify(s){$('toast').textContent=s;$('toast').classList.remove('hidden'
 const baseLink=()=>{const p=new URLSearchParams(location.search);let u;try{u=new URL(fromHub()?window.parent.location.href:location.href)}catch{u=new URL('https://shafiqjumaa.github.io/shafiq-graphics/playhub/')}if(u.protocol!=='https:'||u.hostname==='appassets.androidplatform.net'||u.protocol==='file:')u=new URL('https://shafiqjumaa.github.io/shafiq-graphics/playhub/');u.search='';u.hash='';u.searchParams.set('game','race');u.searchParams.set('room',room);return u.toString()};
 async function copy(text){try{if(navigator.clipboard&&isSecureContext){await navigator.clipboard.writeText(text);return true}const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.left='-9999px';document.body.append(t);t.select();const ok=document.execCommand('copy');t.remove();return ok}catch{return false}}
 async function share(){if(!room){notify('أنشئ غرفة أولاً');return}const url=baseLink();if(window.Android&&typeof Android.shareText==='function'){Android.shareText(url);return}if(navigator.share){try{await navigator.share({title:'انضم إلى سباق السيارات',url});return}catch(e){if(e.name==='AbortError')return}}if(await copy(url))notify('تم نسخ رابط السباق');else notify(url)}
-function menu(){phase='menu';cfg.mode='solo';resetNetwork();showMenu()}
+function menu(){setDrivingOrientation(false);phase='menu';cfg.mode='solo';resetNetwork();showMenu()}
 function garageHtml(){return `<div id="garagePreview" style="--preview-paint:${me.paint}" aria-label="معاينة لون السيارة"></div><div class="garageGrid"><div><label for="garageCar">نوع السيارة</label><select id="garageCar" class="select">${Object.entries(CAR_TYPES).map(([key,v])=>`<option value="${key}" ${me.car===key?'selected':''}>${v.label}</option>`).join('')}</select></div><div><label for="garagePaint">لون السيارة</label><input id="garagePaint" type="color" value="${me.paint}" aria-label="اختر لون السيارة"></div></div><div id="colorSwatches">${CAR_PALETTE.map(c=>`<button type="button" class="swatch" data-paint="${c}" style="background:${c}" aria-label="اللون ${c}" aria-pressed="${me.paint===c}"></button>`).join('')}</div><p id="garageStats"></p>`}
 function garageInit(){const car=$('garageCar'),paint=$('garagePaint');if(!car||!paint)return;
  function change(){me.car=CAR_TYPES[car.value]?car.value:'sport';me.paint=validPaint(paint.value);try{localStorage.setItem(GARAGE_KEY,JSON.stringify({car:me.car,paint:me.paint}))}catch{}
@@ -75,7 +96,7 @@ function garageInit(){const car=$('garageCar'),paint=$('garagePaint');if(!car||!
   const p=roster.find(x=>x.id===me.id);if(p){p.car=me.car;p.paint=me.paint;if(role==='host')publishLobby();else emit('hello',{name:me.name,car:me.car,paint:me.paint});}
  }
  car.addEventListener('change',change);paint.addEventListener('input',change);document.querySelectorAll('.swatch').forEach(btn=>btn.addEventListener('click',()=>{paint.value=btn.dataset.paint;change()}));change();}
-function showMenu(){setPanel(`<div class="eyebrow">PLAYHUB / 3D RACING</div><h1>سباق السرعة <span style="color:var(--teal)">3D</span></h1><p class="muted">6 حلبات • اختيار سيارة ولون • نيترو • سباقات فردية وجماعية حتى أربعة لاعبين</p>${garageHtml()}<div class="row"><div><label for="raceMap">الحلبة</label><select class="select" id="raceMap">${Object.entries(mapDefs).map(([id,m])=>`<option value="${id}" ${cfg.map===id?'selected':''}>${m.name}</option>`).join('')}</select></div><div><label for="raceMode">نمط السباق</label><select class="select" id="raceMode">${Object.entries(modes).map(([id,m])=>`<option value="${id}" ${cfg.mode===id?'selected':''}>${m.label}</option>`).join('')}</select></div></div><button class="cta" id="quickStart">ابدأ السباق</button><p class="small">على الكمبيوتر: A و◀ لليسار، D و▶ لليمين، W للتسارع، S للفرامل، Space للنيترو. على الجوال استخدم أزرار الشاشة.</p><p class="small">حلبة العوائق المستقيمة سباق سرعة من نقطة بداية إلى نهاية، مع حواجز ومخاريط وبراميل ومطبات. حلبة كيني تستعمل نماذج Kenney جاهزة (MIT) وتحميلها يحتاج الإنترنت.</p>`);garageInit();$('quickStart').onclick=()=>{cfg.map=$('raceMap').value;cfg.mode=$('raceMode').value;if(cfg.mode==='solo')solo();else createRoom({map:cfg.map,mode:cfg.mode})}}
+function showMenu(){setPanel(`<div class="eyebrow">PLAYHUB / 3D RACING</div><h1>سباق السرعة <span style="color:var(--teal)">3D</span></h1><p class="muted">6 حلبات • اختيار سيارة ولون • نيترو • سباقات فردية وجماعية حتى أربعة لاعبين</p>${garageHtml()}<div class="row"><div><label for="raceMap">الحلبة</label><select class="select" id="raceMap">${Object.entries(mapDefs).map(([id,m])=>`<option value="${id}" ${cfg.map===id?'selected':''}>${m.name}</option>`).join('')}</select></div><div><label for="raceMode">نمط السباق</label><select class="select" id="raceMode">${Object.entries(modes).map(([id,m])=>`<option value="${id}" ${cfg.mode===id?'selected':''}>${m.label}</option>`).join('')}</select></div></div><label class="toggleLine"><input id="publicRace" type="checkbox" ${cfg.publicRoom!==false?"checked":""}> إظهار الغرفة في قائمة السيرفرات العامة</label><button class="cta" id="quickStart">ابدأ السباق</button><button class="cta alt" id="browseServers">🌐 السيرفرات والغرف المفتوحة</button><p class="small">على الكمبيوتر: A و◀ لليسار، D و▶ لليمين، W للتسارع، S للفرامل، Space للنيترو. على الجوال استخدم أزرار الشاشة.</p><p class="small">حلبة العوائق المستقيمة سباق سرعة من نقطة بداية إلى نهاية، مع حواجز ومخاريط وبراميل ومطبات. حلبة كيني تستعمل نماذج Kenney جاهزة (MIT) وتحميلها يحتاج الإنترنت.</p>`);garageInit();$('quickStart').onclick=()=>{cfg.map=$('raceMap').value;cfg.mode=$('raceMode').value;cfg.publicRoom=$('publicRace').checked;if(cfg.mode==='solo')solo();else createRoom({map:cfg.map,mode:cfg.mode,publicRoom:cfg.publicRoom})};$('browseServers').onclick=showServerBrowse}
 function makeLinkPreview(){return `<div class="eyebrow">رابط الدعوة المباشر</div><div class="roomLink" id="linkPreview">${room?baseLink():'...'}</div><button id="sendLink" class="cta">↗ مشاركة الرابط فقط</button>`}
 function lobby(){phase='lobby';const count=modes[cfg.mode]?.max||2;let show=(roster.length||1);
 setPanel(`<div class="lobby-top"><span>${role==='host'?'أنت منشئ الغرفة':'أنت ضيف'}</span><span>متصل <bdi dir="ltr">${show} / ${count}</bdi></span></div><div class="eyebrow" style="margin-top:14px">SHIFT RACING • ONLINE</div><h1>بانتظار المتسابقين</h1><p class="muted">${mapDefs[cfg.map].name} · ${modes[cfg.mode].label}<br>عند اكتمال العدد تبدأ الجولة تلقائياً، بدون خطوات إضافية.</p>${garageHtml()}<div class="roster">${Array.from({length:count},(_,i)=>{const p=roster.find(x=>x.slot===i);return `<div class="rosterLine"><span class="rosterColor" style="background:#${(roster.find(x=>x.slot===i)?.paint||('#'+colors[i%4].toString(16).padStart(6,'0'))).slice(1)}"></span>${p?(p.id===me.id?'أنت':escapeHtml(p.name)):'مكان فارغ — ينتظر لاعباً'}${cfg.mode==='team'?` <span class="small" style="margin-right:auto">فريق ${i%2+1}</span>`:''}</div>`}).join('')}</div>${makeLinkPreview()}<div id="readyStatus">اختر سيارتك ولونك قبل بدء الجولة</div><button id="leaveRoom" class="cta alt">العودة للبوابة</button>`);garageInit();$('sendLink').onclick=share;$('leaveRoom').onclick=()=>{resetNetwork();showMenu()};$('hudMap').textContent=mapDefs[cfg.map].name}
@@ -86,8 +107,41 @@ function parentMsg(type,extra={}){if(fromHub())window.parent.postMessage({type,g
 function err(message){parentMsg('playhub-error',{session:sessionId,message});notify(message);setPanel(`<h1>تعذّر الاتصال</h1><p class="muted">${escapeHtml(message)}</p><button class="cta" id="tryAgain">إعادة المحاولة</button><button class="cta alt" id="goBack">العودة</button>`);$('tryAgain').onclick=()=>role==='host'?createRoom(cfg):joinRoom(room);$('goBack').onclick=menu}
 function ready(){parentMsg('playhub-ready')}
 const presences=new Map(),confirmed=new Map();
+
+const DISCOVERY_TOPIC='playhub/racing/v1/discovery',visibleServers=new Map();
+let discoveryClient=null,discoveryRefresh=0;
+function stopServerBrowse(){clearInterval(discoveryRefresh);discoveryRefresh=0;if(discoveryClient){try{discoveryClient.end(true)}catch(e){}discoveryClient=null}}
+function announceServer(){if(role!=='host'||!client?.connected||!room||cfg.publicRoom===false||phase!=='lobby')return;client.publish(DISCOVERY_TOPIC,JSON.stringify({kind:'playhub-public-race',room,map:cfg.map,mode:cfg.mode,players:roster.length,max:modes[cfg.mode].max,updated:timestamp()}),{qos:0,retain:false})}
+function renderServers(){
+ const list=$('serverList'),status=$('serversStatus');if(!list||phase!=='browse')return;
+ const now=timestamp();for(const [code,m] of visibleServers)if(now-m.updated>15500)visibleServers.delete(code);
+ const rooms=Array.from(visibleServers.values()).filter(m=>m.players<m.max).sort((a,b)=>b.players-a.players);
+ if(status)status.textContent=rooms.length+' غرف عامة متاحة • الاتصال العالمي';
+ list.replaceChildren();
+ if(!rooms.length){const empty=document.createElement('div');empty.className='serverEmpty';empty.textContent='لا توجد غرف عامة مفتوحة الآن. افتح غرفة أو شارك رابطك مع الأصدقاء.';list.append(empty);return}
+ for(const m of rooms){
+  const row=document.createElement('div'),info=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small'),badge=document.createElement('span'),button=document.createElement('button');
+  row.className='serverRow';title.textContent='🏁 '+mapDefs[m.map].name;detail.textContent=modes[m.mode].label+' · '+m.players+'/'+m.max+' لاعبين';badge.className='serverBadge';badge.textContent='بانتظار لاعبين';button.textContent='انضمام';button.onclick=()=>{stopServerBrowse();joinRoom(m.room)};
+  info.append(title,document.createElement('br'),detail,document.createElement('br'),badge);row.append(info,button);list.append(row);
+ }
+}
+function showServerBrowse(){
+ resetNetwork();phase='browse';
+ setPanel('<div class="eyebrow">PLAYHUB LIVE • SERVER BROWSER</div><h1>السيرفرات والغرف المفتوحة</h1><p class="muted">تظهر هنا الغرف العامة النشطة على خادم السباق.</p><div class="serverTools"><span id="serversStatus">جاري البحث...</span><button class="cta alt" id="refreshServers" style="width:auto;padding:9px 13px">تحديث</button></div><div class="serverList" id="serverList"></div><button class="cta" id="createPublicRace">إنشاء غرفة عامة</button><button class="cta alt" id="exitServers">العودة</button>');
+ $('refreshServers').onclick=renderServers;$('exitServers').onclick=()=>{stopServerBrowse();showMenu()};$('createPublicRace').onclick=()=>{stopServerBrowse();createRoom({map:cfg.map,mode:cfg.mode==='solo'?'duo':cfg.mode,publicRoom:true})};
+ renderServers();discoveryRefresh=setInterval(renderServers,3500);
+ let attempts=0;const attach=()=>{
+  if(phase!=='browse'||discoveryClient)return;
+  if(!window.mqtt?.connect){if(attempts++<25)setTimeout(attach,350);else if($('serversStatus'))$('serversStatus').textContent='تعذّر تحميل مكتبة الاتصال';return;}
+  discoveryClient=window.mqtt.connect('wss://broker.emqx.io:8084/mqtt',{clientId:'ph_discovery_'+randomToken(9),clean:true,reconnectPeriod:1800,connectTimeout:10000});
+  discoveryClient.on('connect',()=>{if(phase==='browse'){discoveryClient.subscribe(DISCOVERY_TOPIC,{qos:0});const a=$('serversStatus');if(a)a.textContent='متصل بالخادم • استعراض الغرف'}});
+  discoveryClient.on('message',(topic,payload)=>{if(topic!==DISCOVERY_TOPIC)return;try{const m=JSON.parse(payload.toString());if(m.kind!=='playhub-public-race'||!/^1-\d{6}$/.test(m.room)||!mapDefs[m.map]||!modes[m.mode]||!Number.isInteger(m.players)||m.players<1||m.players>4||m.max!==modes[m.mode].max||Math.abs(timestamp()-m.updated)>16000)return;visibleServers.set(m.room,m);renderServers()}catch(e){}});
+  discoveryClient.on('error',()=>{const a=$('serversStatus');if(a)a.textContent='تعذّر الاتصال بالسيرفر • إعادة محاولة'});
+ };attach()
+}
+
 function resetNetwork(){
- fullSince=0;rosterRevision=0;lastSeenRevision=-1;presences.clear();confirmed.clear();
+ stopServerBrowse();setDrivingOrientation(false);fullSince=0;rosterRevision=0;lastSeenRevision=-1;presences.clear();confirmed.clear();
  clearInterval(heartbeat);clearTimeout(disconnectTimer);heartbeat=0;
  if(client){try{if(role==='guest'&&client.connected)emit('leave');client.end(true)}catch{}}
  client=null;connected=false;room='';host='';roster=[];finished={};topic='';role='solo';
@@ -99,7 +153,7 @@ function connect(){return new Promise((resolve,reject)=>{if(!window.mqtt?.connec
   client.on('message',(t,p)=>{if(t!==topic)return;try{const m=JSON.parse(p.toString());if(m.v!==1||m.room!==room||m.id===me.id||m.ts<timestamp()-30000||Math.abs(m.ts-timestamp())>60000)return;receive(m)}catch(e){}});
   client.on('close',()=>{connected=false;if(phase==='race'||phase==='lobby')notify('الاتصال ضعيف — نحاول إعادة الاتصال بالخادم')});client.on('error',()=>{});
  })}
-async function createRoom(settings={}){resetNetwork();cfg.map=mapDefs[settings.map]?settings.map:cfg.map;cfg.mode=modes[settings.mode]?settings.mode:'duo';if(cfg.mode==='solo'){solo();return}cfg.laps=3;role='host';host=me.id;room=randomRoom();topic='playhub/racing/v1/'+room;roster=[{id:me.id,name:me.name,slot:0,team:0,car:me.car,paint:me.paint}];me.slot=0;sessionId=settings.session||sessionId;phase='connecting';setPanel(`<div class="eyebrow">SERVER CONNECTION</div><h1>جاري إنشاء السباق...</h1><p class="muted">تأسيس غرفة واحدة على الخادم، دون ظهور شاشة إنشاء ثانية.</p>`);
+async function createRoom(settings={}){resetNetwork();cfg.map=mapDefs[settings.map]?settings.map:cfg.map;cfg.mode=modes[settings.mode]?settings.mode:'duo';if(cfg.mode==='solo'){solo();return}cfg.laps=3;cfg.publicRoom=settings.publicRoom!==false;role='host';host=me.id;room=randomRoom();topic='playhub/racing/v1/'+room;roster=[{id:me.id,name:me.name,slot:0,team:0,car:me.car,paint:me.paint}];me.slot=0;sessionId=settings.session||sessionId;phase='connecting';setPanel(`<div class="eyebrow">SERVER CONNECTION</div><h1>جاري إنشاء السباق...</h1><p class="muted">تأسيس غرفة واحدة على الخادم، دون ظهور شاشة إنشاء ثانية.</p>`);
 try{await connect();lobby();parentMsg('playhub-room',{room,session:sessionId});publishLobby();beginHeartbeat()}catch(e){err(String(e.message||e))}}
 async function joinRoom(code){resetNetwork();role='guest';room=String(code||'').trim();if(!/^1-\d{6}$/.test(room)){err('رابط السباق غير صالح');return}topic='playhub/racing/v1/'+room;phase='connecting';setPanel('<h1>جاري دخول السباق...</h1><p class="muted">ندخلك إلى الغرفة مباشرة عبر الرابط دون إنشاء غرفة أخرى.</p>');try{await connect();phase='lobby';setPanel('<h1>بانتظار منشئ السباق...</h1><p class="muted">تم الاتصال بالخادم. نبحث عن تفاصيل الغرفة.</p>');parentMsg('playhub-room',{room,session:sessionId});beginHeartbeat();disconnectTimer=setTimeout(()=>{if(!roster.some(p=>p.id===me.id)&&phase==='lobby')err('لم يؤكّد خادم السباق انضمامك للغرفة. تحقق من أن المنشئ ما زال متصلاً وأعد المحاولة.')},30000)}catch(e){err(String(e.message||e))}}
 
@@ -140,7 +194,7 @@ function pruneRoster(){
  for(const pid of confirmed.keys())if(!ids.has(pid))confirmed.delete(pid);
  if(roster.length!==old){fullSince=0;lobby()}
 }
-function publishLobby(){if(role!=='host')return;emit('lobby',{cfg,host:me.id,roster,phase,startAt,revision:++rosterRevision})}
+function publishLobby(){if(role!=='host')return;emit('lobby',{cfg,host:me.id,roster,phase,startAt,revision:++rosterRevision});announceServer()}
 function sendWelcome(playerId){if(role!=='host')return;emit('welcome',{to:playerId,cfg,host:me.id,roster,phase,startAt,revision:rosterRevision})}
 function receive(m){
  if(m.type==='hello'){
@@ -187,7 +241,7 @@ function receiveLobby(m){
  const previous=roster.map(p=>p.id+':'+p.slot+':'+p.car+':'+p.paint).join('|');
  roster=Array.isArray(m.roster)?m.roster.slice(0,4):[];
  const c=m.cfg||{};
- cfg={map:mapDefs[c.map]?c.map:'city',mode:modes[c.mode]?c.mode:'duo',laps:3};
+ cfg={map:mapDefs[c.map]?c.map:'city',mode:modes[c.mode]?c.mode:'duo',laps:3,publicRoom:c.publicRoom!==false};
  const p=roster.find(p=>p.id===me.id);
  if(p){me.slot=p.slot;me.team=p.team;emit('ready',{host,revision:rev})}
  else emit('hello',{name:me.name,car:me.car,paint:me.paint});
@@ -200,8 +254,8 @@ function receiveLobby(m){
 }
 function startRace(){if(role!=='host'||phase!=='lobby'||roster.length!==modes[cfg.mode].max||!roster.every(p=>p.id===me.id||(confirmed.has(p.id)&&timestamp()-confirmed.get(p.id)<12000)))return;startAt=timestamp()+7000;phase='countdown';emit('start',{startAt,cfg,roster});publishLobby();beginCountdown()}
 function solo(){resetNetwork();cfg.mode='solo';role='solo';roster=[{id:me.id,name:me.name,slot:0,car:me.car,paint:me.paint}];me.slot=0;startAt=timestamp()+3300;beginCountdown()}
-let startedCountdown=false;async function beginCountdown(){if(phase==='race')return;if(startedCountdown)return;startedCountdown=true;phase='countdown';hidePanel();$('hud').classList.remove('hidden');$('mini').classList.remove('hidden');$('controls').classList.remove('hidden');$('raceBanner').classList.remove('hidden');
-try{await ensure3D();buildScene();resetMotion();if(role==='host')publishLobby();}catch(e){startedCountdown=false;err('تعذر عرض السباق ثلاثي الأبعاد: '+(e.message||e));return}
+let startedCountdown=false;async function beginCountdown(){if(phase==='race')return;if(startedCountdown)return;startedCountdown=true;phase='countdown';setDrivingOrientation(true);hidePanel();$('hud').classList.remove('hidden');$('mini').classList.remove('hidden');$('controls').classList.remove('hidden');$('raceBanner').classList.remove('hidden');
+try{await ensure3D();buildScene();resetMotion();if(role==='host')publishLobby();}catch(e){startedCountdown=false;setDrivingOrientation(false);err('تعذر عرض السباق ثلاثي الأبعاد: '+(e.message||e));return}
 const iv=setInterval(()=>{if(phase!=='countdown'){clearInterval(iv);startedCountdown=false;return}const diff=startAt-timestamp();if(diff<=0){clearInterval(iv);startedCountdown=false;$('raceBanner').textContent='انطلق!';setTimeout(()=>$('raceBanner').classList.add('hidden'),1200);gameTime=0;phase='race';lastTick=performance.now()}else{$('raceBanner').classList.remove('hidden');$('raceBanner').textContent=String(Math.ceil(diff/1000))}},80);
 }
 async function ensure3D(){if(THREE)return;const m=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js');THREE=m;init3D()}
@@ -560,7 +614,7 @@ function applySession(msg){if(!msg||msg.type!=='playhub-session'||msg.game!=='ra
 addEventListener('message',e=>{if(!fromHub()||e.source!==window.parent)return;if(e.data?.type==='playhub-ping'){ready();return}applySession(e.data)});
 const query=new URLSearchParams(location.search);
 if(!fromHub()&&query.get('room')){joinRoom(query.get('room'))}else if(!fromHub()&&query.get('action')==='create'){cfg.map=mapDefs[query.get('map')]?query.get('map'):'city';cfg.mode=modes[query.get('mode')]?query.get('mode'):'duo';createRoom(cfg)}else showMenu();
-ready();addEventListener('pagehide',()=>{resetNetwork();cancelAnimationFrame(anim)});
+ready();addEventListener('pagehide',()=>{setDrivingOrientation(false);resetNetwork();cancelAnimationFrame(anim)});
 </script>
 </body>
 </html>
